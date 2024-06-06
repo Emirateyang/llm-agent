@@ -15,11 +15,11 @@
  */
 package com.llmagent.vector.store;
 
-import com.llmagent.data.MetaData;
+import com.llmagent.data.Metadata;
 
 import java.util.Arrays;
 
-public class VectorData extends MetaData {
+public class VectorData extends Metadata {
 
     private double[] vector;
 
@@ -35,7 +35,7 @@ public class VectorData extends MetaData {
     public String toString() {
         return "VectorData{" +
                 "vector=" + Arrays.toString(vector) +
-                ", metaDataMap=" + metaDataMap +
+                ", metaDataMap=" + metadataMap +
                 '}';
     }
 }

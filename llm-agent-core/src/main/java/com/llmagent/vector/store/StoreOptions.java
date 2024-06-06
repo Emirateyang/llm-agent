@@ -15,7 +15,7 @@
  */
 package com.llmagent.vector.store;
 
-import com.llmagent.data.MetaData;
+import com.llmagent.data.Metadata;
 import com.llmagent.llm.embedding.EmbeddingOptions;
 import com.llmagent.util.StringUtil;
 
@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class StoreOptions extends MetaData {
+public class StoreOptions extends Metadata {
 
     public static final StoreOptions DEFAULT = new StoreOptions() {
         @Override

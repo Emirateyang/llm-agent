@@ -35,9 +35,13 @@
         <lombok.version>1.18.26</lombok.version>
         <junit.version>4.13.2</junit.version>
         <okhttp.version>4.12.0</okhttp.version>
+        <slf4j.version>2.0.13</slf4j.version>
         <fastjson.version>2.0.51</fastjson.version>
         <spring-boot.version>3.3.0</spring-boot.version>
         <llm-agent.version>1.0.0-beta.1</llm-agent.version>
+        <postgresql.version>42.7.2</postgresql.version>
+        <pgvector.version>0.1.4</pgvector.version>
+        <spring-framework.version>6.1.4</spring-framework.version>
     </properties>
 
     <dependencyManagement>

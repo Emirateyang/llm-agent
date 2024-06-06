@@ -15,13 +15,13 @@
  */
 package com.llmagent.vector.store;
 
-import com.llmagent.data.MetaData;
+import com.llmagent.data.Metadata;
 import com.llmagent.document.Document;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class StoreResult extends MetaData {
+public class StoreResult extends Metadata {
     private final boolean success;
     private List<Object> ids;
 
