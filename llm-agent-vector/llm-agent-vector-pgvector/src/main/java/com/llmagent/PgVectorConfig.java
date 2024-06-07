@@ -17,35 +17,36 @@ package com.llmagent;
 
 import java.io.Serializable;
 
-/**
- * @see "https://milvus.io/docs/install-java.md"
- */
-public class MilvusConfig implements Serializable {
-    private String uri;
-    private String token;
+public class PgVectorConfig implements Serializable {
+    private String host;
+    private Integer port;
     private String databaseName = "llmagent";
     private String username;
     private String password;
-    private String defaultCollectionName;
-    private boolean autoCreateCollection = true;
+    private boolean dropTableIfExist = false;
+    private boolean createTable = true;
 
-    public MilvusConfig() {
+    private Integer indexListSize = 150;
+
+    private String schemaName = "public";
+
+    public PgVectorConfig() {
     }
 
-    public String getUri() {
-        return uri;
+    public String getHost() {
+        return host;
     }
 
-    public void setUri(String uri) {
-        this.uri = uri;
+    public void setHost(String host) {
+        this.host = host;
     }
 
-    public String getToken() {
-        return token;
+    public Integer getPort() {
+        return port;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setPort(Integer port) {
+        this.port = port;
     }
 
     public String getDatabaseName() {
@@ -56,21 +57,6 @@ public class MilvusConfig implements Serializable {
         this.databaseName = databaseName;
     }
 
-    public String getDefaultCollectionName() {
-        return defaultCollectionName;
-    }
-
-    public void setDefaultCollectionName(String defaultCollectionName) {
-        this.defaultCollectionName = defaultCollectionName;
-    }
-
-    public boolean isAutoCreateCollection() {
-        return autoCreateCollection;
-    }
-
-    public void setAutoCreateCollection(boolean autoCreateCollection) {
-        this.autoCreateCollection = autoCreateCollection;
-    }
 
     public String getUsername() {
         return username;
@@ -86,5 +72,37 @@ public class MilvusConfig implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean isDropTableIfExist() {
+        return dropTableIfExist;
+    }
+
+    public void setDropTableIfExist(boolean dropTableIfExist) {
+        this.dropTableIfExist = dropTableIfExist;
+    }
+
+    public boolean isCreateTable() {
+        return createTable;
+    }
+
+    public void setCreateTable(boolean createTable) {
+        this.createTable = createTable;
+    }
+
+    public Integer getIndexListSize() {
+        return indexListSize;
+    }
+
+    public void setIndexListSize(Integer indexListSize) {
+        this.indexListSize = indexListSize;
+    }
+
+    public String getSchemaName() {
+        return schemaName;
+    }
+
+    public void setSchemaName(String schemaName) {
+        this.schemaName = schemaName;
     }
 }

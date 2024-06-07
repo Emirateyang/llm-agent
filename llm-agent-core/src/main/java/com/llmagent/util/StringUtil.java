@@ -41,4 +41,11 @@ public class StringUtil {
         }
         return null;
     }
+
+    public static String quoted(Object object) {
+        if (object == null) {
+            return "null";
+        }
+        return "\"" + object + "\"";
+    }
 }

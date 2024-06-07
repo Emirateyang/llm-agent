@@ -25,5 +25,5 @@ public interface DocumentIdGenerator {
      * @param document Document
      * @return the unique ID
      */
-    Object generateId(Document document);
+    String generateId(Document document);
 }

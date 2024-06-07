@@ -26,6 +26,6 @@ public interface EmbeddingModel {
     VectorData embed(Document document, EmbeddingOptions options);
 
     default int dimensions() {
-        return embed(Document.of("dimensions")).getVector().length;
+        return embed(Document.of("dimensions")).getEmbedding().size();
     }
 }

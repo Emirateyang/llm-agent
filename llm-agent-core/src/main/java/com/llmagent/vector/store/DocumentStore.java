@@ -61,7 +61,7 @@ public abstract class DocumentStore extends VectorStore<Document> {
     }
 
     @Override
-    public StoreResult store(List<Document> documents, StoreOptions options) {
+    public StoreResult add(List<Document> documents, StoreOptions options) {
         if (options == null) {
             options = StoreOptions.DEFAULT;
         }
@@ -73,7 +73,7 @@ public abstract class DocumentStore extends VectorStore<Document> {
         else if (documentIdGenerator != null) {
             for (Document document : documents) {
                 if (document.getId() == null) {
-                    Object id = documentIdGenerator.generateId(document);
+                    String id = documentIdGenerator.generateId(document);
                     document.setId(id);
                 }
             }
@@ -81,7 +81,7 @@ public abstract class DocumentStore extends VectorStore<Document> {
 
         embedDocumentsIfNecessary(documents, options);
 
-        return storeImplement(documents, options);
+        return addImplement(documents, options);
     }
 
     @Override
@@ -93,26 +93,15 @@ public abstract class DocumentStore extends VectorStore<Document> {
     }
 
     @Override
-    public StoreResult update(List<Document> documents, StoreOptions options) {
-        if (options == null) {
-            options = StoreOptions.DEFAULT;
-        }
-
-        embedDocumentsIfNecessary(documents, options);
-        return updateImplement(documents, options);
-    }
-
-
-    @Override
     public List<Document> search(SearchWrapper wrapper, StoreOptions options) {
         if (options == null) {
             options = StoreOptions.DEFAULT;
         }
 
-        if (wrapper.getVector() == null && embeddingModel != null && wrapper.isWithVector()) {
+        if (wrapper.getEmbedding() == null && embeddingModel != null && wrapper.isWithVector()) {
             VectorData vectorData = embeddingModel.embed(Document.of(wrapper.getText()), options.getEmbeddingOptions());
             if (vectorData != null) {
-                wrapper.setVector(vectorData.getVector());
+                wrapper.setEmbedding(vectorData.getEmbedding());
             }
         }
 
@@ -125,21 +114,18 @@ public abstract class DocumentStore extends VectorStore<Document> {
             return;
         }
         for (Document document : documents) {
-            if (document.getVector() == null) {
+            if (document.getEmbedding() == null) {
                 VectorData vectorData = embeddingModel.embed(document, options.getEmbeddingOptions());
                 if (vectorData != null) {
-                    document.setVector(vectorData.getVector());
+                    document.setEmbedding(vectorData.getEmbedding());
                 }
             }
         }
     }
 
-
-    public abstract StoreResult storeImplement(List<Document> documents, StoreOptions options);
+    public abstract StoreResult addImplement(List<Document> documents, StoreOptions options);
 
     public abstract StoreResult deleteImplement(Collection<Object> ids, StoreOptions options);
-
-    public abstract StoreResult updateImplement(List<Document> documents, StoreOptions options);
 
     public abstract List<Document> searchImplement(SearchWrapper wrapper, StoreOptions options);
 }

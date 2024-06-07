@@ -17,25 +17,27 @@ package com.llmagent.vector.store;
 
 import com.llmagent.data.Metadata;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class VectorData extends Metadata {
 
-    private double[] vector;
+    private List<Double> embedding = new ArrayList<>();
 
-    public double[] getVector() {
-        return vector;
+    public List<Double> getEmbedding() {
+        return embedding;
     }
 
-    public void setVector(double[] vector) {
-        this.vector = vector;
+    public void setEmbedding(List<Double> embedding) {
+        this.embedding = embedding;
     }
 
     @Override
     public String toString() {
         return "VectorData{" +
-                "vector=" + Arrays.toString(vector) +
-                ", metaDataMap=" + metadataMap +
+                "embedding=" + embedding.stream().map(String::valueOf).collect(Collectors.joining(",")) +
+                ", metaDataMap=" + metadata +
                 '}';
     }
 }

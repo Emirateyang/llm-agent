@@ -22,6 +22,9 @@ import java.security.MessageDigest;
 import java.util.Base64;
 
 public class HashUtil {
+
+    private HashUtil() {}
+
     private static final char[] HEX_DIGITS = "0123456789abcdef".toCharArray();
     private static final char[] CHAR_ARRAY = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 

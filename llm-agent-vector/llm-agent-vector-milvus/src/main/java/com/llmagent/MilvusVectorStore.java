@@ -36,7 +36,6 @@ import io.milvus.v2.service.collection.request.GetLoadStateReq;
 import io.milvus.v2.service.vector.request.DeleteReq;
 import io.milvus.v2.service.vector.request.InsertReq;
 import io.milvus.v2.service.vector.request.SearchReq;
-import io.milvus.v2.service.vector.request.UpsertReq;
 import io.milvus.v2.service.vector.response.InsertResp;
 import io.milvus.v2.service.vector.response.SearchResp;
 import org.slf4j.Logger;
@@ -66,15 +65,15 @@ public class MilvusVectorStore extends DocumentStore {
     }
 
     @Override
-    public StoreResult storeImplement(List<Document> documents, StoreOptions options) {
+    public StoreResult addImplement(List<Document> documents, StoreOptions options) {
         List<JSONObject> data = new ArrayList<>();
         for (Document doc : documents) {
             JSONObject dict = new JSONObject();
             dict.put("id", String.valueOf(doc.getId()));
             dict.put("content", doc.getContent());
-            dict.put("vector", VectorUtil.toFloatList(doc.getVector()));
+            dict.put("vector", VectorUtil.toFloatList(doc.getEmbedding()));
 
-            Map<String, Object> metaDataMap = doc.getMetadataMap();
+            Map<String, Object> metaDataMap = doc.getMetadata();
             JSONObject jsonObject = JSON.parseObject(JSON.toJSONBytes(metaDataMap == null ? Collections.EMPTY_MAP : metaDataMap));
             dict.put("metadata", jsonObject);
             data.add(dict);
@@ -100,7 +99,7 @@ public class MilvusVectorStore extends DocumentStore {
                 if (success != null && success) {
                     //store
                     options.addMetaData("forInternal", true);
-                    storeImplement(documents, options);
+                    addImplement(documents, options);
                 }
             } else {
                 return StoreResult.fail();
@@ -207,41 +206,41 @@ public class MilvusVectorStore extends DocumentStore {
 
     }
 
-    /**
-     * update document
-     * @param documents list of documents to update
-     * @param options store options
-     * @return store result
-     */
-    @Override
-    public StoreResult updateImplement(List<Document> documents, StoreOptions options) {
-        if (documents == null || documents.isEmpty()) {
-            return StoreResult.success();
-        }
-        List<JSONObject> data = new ArrayList<>();
-        for (Document doc : documents) {
-            JSONObject dict = new JSONObject();
-
-            dict.put("id", doc.getId());
-            dict.put("content", doc.getContent());
-            dict.put("vector", VectorUtil.toFloatList(doc.getVector()));
-
-            Map<String, Object> metadatas = doc.getMetadataMap();
-            JSONObject jsonObject = JSON.parseObject(JSON.toJSONBytes(metadatas == null ? Collections.EMPTY_MAP : metadatas));
-            dict.put("metadata", jsonObject);
-            data.add(dict);
-
-            data.add(dict);
-        }
-
-        UpsertReq upsertReq = UpsertReq.builder()
-                .collectionName(options.getCollectionNameOrDefault(defaultCollectionName))
-                .partitionName(options.getPartitionName())
-                .data(data)
-                .build();
-        client.upsert(upsertReq);
-        return StoreResult.successWithIds(documents);
-    }
+//    /**
+//     * update document
+//     * @param documents list of documents to update
+//     * @param options store options
+//     * @return store result
+//     */
+//    @Override
+//    public StoreResult updateImplement(List<Document> documents, StoreOptions options) {
+//        if (documents == null || documents.isEmpty()) {
+//            return StoreResult.success();
+//        }
+//        List<JSONObject> data = new ArrayList<>();
+//        for (Document doc : documents) {
+//            JSONObject dict = new JSONObject();
+//
+//            dict.put("id", doc.getId());
+//            dict.put("content", doc.getContent());
+//            dict.put("vector", VectorUtil.toFloatList(doc.getEmbedding()));
+//
+//            Map<String, Object> metadatas = doc.getMetadata();
+//            JSONObject jsonObject = JSON.parseObject(JSON.toJSONBytes(metadatas == null ? Collections.EMPTY_MAP : metadatas));
+//            dict.put("metadata", jsonObject);
+//            data.add(dict);
+//
+//            data.add(dict);
+//        }
+//
+//        UpsertReq upsertReq = UpsertReq.builder()
+//                .collectionName(options.getCollectionNameOrDefault(defaultCollectionName))
+//                .partitionName(options.getPartitionName())
+//                .data(data)
+//                .build();
+//        client.upsert(upsertReq);
+//        return StoreResult.successWithIds(documents);
+//    }
 
     @Override
     public List<Document> searchImplement(SearchWrapper searchWrapper, StoreOptions options) {
@@ -260,7 +259,7 @@ public class MilvusVectorStore extends DocumentStore {
                 .outputFields(outputFields)
                 .topK(searchWrapper.getMaxResults())
                 .annsField("vector")
-                .data(Collections.singletonList(VectorUtil.toFloatList(searchWrapper.getVector())))
+                .data(Collections.singletonList(VectorUtil.toFloatList(searchWrapper.getEmbedding())))
                 .filter(searchWrapper.toFilterExpression(MilvusExpressionAdaptor.DEFAULT))
                 .build();
 
@@ -277,12 +276,12 @@ public class MilvusVectorStore extends DocumentStore {
                     }
 
                     Document doc = new Document();
-                    doc.setId(result.getId());
+                    doc.setId(String.valueOf(result.getId()));
 
                     Object vectorObj = entity.get("vector");
                     if (vectorObj instanceof List) {
                         //noinspection unchecked
-                        doc.setVector(VectorUtil.convertToVector((List<Float>) vectorObj));
+                        doc.setEmbedding(VectorUtil.convertToVector((List<Float>) vectorObj));
                     }
 
                     doc.setContent((String) entity.get("content"));

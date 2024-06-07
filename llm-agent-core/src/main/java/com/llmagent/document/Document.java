@@ -17,17 +17,21 @@ package com.llmagent.document;
 
 import com.llmagent.vector.store.VectorData;
 
+import java.util.Map;
+
 public class Document extends VectorData {
 
     /**
      * Document ID
      */
-    private Object id;
+    private String id;
 
     /**
      * Document Content
      */
     private String content;
+
+    private double score;
 
 
     public Document() {
@@ -37,11 +41,17 @@ public class Document extends VectorData {
         this.content = content;
     }
 
-    public Object getId() {
+    public Document(String id, String content, Map<String, Object> metadata) {
+        this.id = id;
+        this.content = content;
+        super.metadata = metadata;
+    }
+
+    public String getId() {
         return id;
     }
 
-    public void setId(Object id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -51,6 +61,14 @@ public class Document extends VectorData {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public double getScore() {
+        return score;
+    }
+
+    public void setScore(double score) {
+        this.score = score;
     }
 
     public static Document of(String content){

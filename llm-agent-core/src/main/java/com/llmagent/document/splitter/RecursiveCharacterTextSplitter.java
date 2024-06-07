@@ -49,7 +49,7 @@ public class RecursiveCharacterTextSplitter implements DocumentSplitter {
         List<Document> texts = new ArrayList<>(chunks.size());
         for (String textString : chunks) {
             Document newDocument = new Document();
-            newDocument.addMetadata(document.getMetadataMap());
+            newDocument.addMetadata(document.getMetadata());
             newDocument.setContent(textString);
 
             //we should invoke setId after setContent

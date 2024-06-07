@@ -33,8 +33,8 @@ public abstract class VectorStore<T extends VectorData> {
      * @param vectorData The Vector Data
      * @return Store Result
      */
-    public StoreResult store(T vectorData) {
-        return store(vectorData, StoreOptions.DEFAULT);
+    public StoreResult add(T vectorData) {
+        return add(vectorData, StoreOptions.DEFAULT);
     }
 
     /**
@@ -44,8 +44,8 @@ public abstract class VectorStore<T extends VectorData> {
      * @param options    Store Options
      * @return Store Result
      */
-    public StoreResult store(T vectorData, StoreOptions options) {
-        return store(Collections.singletonList(vectorData), options);
+    public StoreResult add(T vectorData, StoreOptions options) {
+        return add(Collections.singletonList(vectorData), options);
     }
 
     /**
@@ -54,8 +54,8 @@ public abstract class VectorStore<T extends VectorData> {
      * @param vectorDataList The Vector Data List
      * @return Store Result
      */
-    public StoreResult store(List<T> vectorDataList) {
-        return store(vectorDataList, StoreOptions.DEFAULT);
+    public StoreResult add(List<T> vectorDataList) {
+        return add(vectorDataList, StoreOptions.DEFAULT);
     }
 
     /**
@@ -65,7 +65,7 @@ public abstract class VectorStore<T extends VectorData> {
      * @param options        options
      * @return store result
      */
-    public abstract StoreResult store(List<T> vectorDataList, StoreOptions options);
+    public abstract StoreResult add(List<T> vectorDataList, StoreOptions options);
 
 
     /**
@@ -97,47 +97,6 @@ public abstract class VectorStore<T extends VectorData> {
      * @return store result
      */
     public abstract StoreResult delete(Collection<Object> ids, StoreOptions options);
-
-    /**
-     * update the vector data by id
-     *
-     * @param vectorData the vector data
-     * @return store result
-     */
-    public StoreResult update(T vectorData) {
-        return update(vectorData, StoreOptions.DEFAULT);
-    }
-
-
-    /**
-     * update the vector data by id with options
-     *
-     * @param vectorData vector data
-     * @param options    store options
-     * @return store result
-     */
-    public StoreResult update(T vectorData, StoreOptions options) {
-        return update(Collections.singletonList(vectorData), options);
-    }
-
-    /**
-     * update vector data list
-     *
-     * @param vectorDataList vector data list
-     * @return store result
-     */
-    public StoreResult update(List<T> vectorDataList) {
-        return update(vectorDataList, StoreOptions.DEFAULT);
-    }
-
-    /**
-     * update store data list with options
-     *
-     * @param vectorDataList vector data list
-     * @param options        store options
-     * @return store result
-     */
-    public abstract StoreResult update(List<T> vectorDataList, StoreOptions options);
 
     /**
      * search vector data by SearchWrapper

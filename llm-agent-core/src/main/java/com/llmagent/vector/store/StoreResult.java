@@ -23,7 +23,7 @@ import java.util.List;
 
 public class StoreResult extends Metadata {
     private final boolean success;
-    private List<Object> ids;
+    private List<String> ids;
 
     public StoreResult(boolean success) {
             this.success = success;
@@ -33,7 +33,7 @@ public class StoreResult extends Metadata {
         return success;
     }
 
-    public List<Object> ids() {
+    public List<String> ids() {
         return ids;
     }
 
@@ -47,10 +47,7 @@ public class StoreResult extends Metadata {
 
     public static StoreResult successWithIds(List<Document> documents) {
         StoreResult result = success();
-        result.ids = new ArrayList<>(documents.size());
-        for (Document document : documents) {
-            result.ids.add(document.getId());
-        }
+        result.ids = documents.stream().map(Document::getId).toList();
         return result;
     }
 }

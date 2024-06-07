@@ -27,7 +27,7 @@ public class RandomIdGenerator implements DocumentIdGenerator {
      * @return the unique ID
      */
     @Override
-    public Object generateId(Document document) {
+    public String generateId(Document document) {
         return UUIDUtil.randomUUID();
     }
 }

@@ -6,41 +6,60 @@ import java.util.Map;
 
 public class Metadata implements Serializable {
 
-    protected Map<String, Object> metadataMap;
+    protected Map<String, Object> metadata;
+
+    public Metadata() {
+        this(new HashMap<>());
+    }
+
+    public Metadata(Map<String, ?> metadata) {
+        this.metadata = new HashMap<>(metadata);
+    }
 
     public Object getMetaData(String key) {
-        return metadataMap != null ? metadataMap.get(key) : null;
+        return metadata != null ? metadata.get(key) : null;
     }
 
     public void addMetaData(String key, Object value) {
-        if (metadataMap == null) {
-            metadataMap = new HashMap<>();
+        if (metadata == null) {
+            metadata = new HashMap<>();
         }
-        metadataMap.put(key, value);
+        metadata.put(key, value);
     }
 
     public void addMetadata(Map<String, Object> metaData) {
         if (metaData == null || metaData.isEmpty()) {
             return;
         }
-        if (metadataMap == null) {
-            metadataMap = new HashMap<>();
+        if (metadata == null) {
+            metadata = new HashMap<>();
         }
-        metadataMap.putAll(metaData);
+        metadata.putAll(metaData);
     }
 
     public Object removeMetaData(String key) {
-        if (this.metadataMap == null) {
+        if (this.metadata == null) {
             return null;
         }
-        return this.metadataMap.remove(key);
+        return this.metadata.remove(key);
     }
 
-    public Map<String, Object> getMetadataMap() {
-        return metadataMap;
+    public Map<String, Object> getMetadata() {
+        return metadata;
     }
 
-    public void setMetadataMap(Map<String, Object> metaData) {
-        this.metadataMap = metaData;
+    public void setMetadata(Map<String, Object> metaData) {
+        this.metadata = metaData;
+    }
+
+    public boolean containsKey(String key) {
+        return metadata.containsKey(key);
+    }
+
+    /**
+     * Get a copy of the metadata as a map of key-value pairs.
+     */
+    public Map<String, Object> toMap() {
+        return new HashMap<>(metadata);
     }
 }
