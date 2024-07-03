@@ -8,6 +8,7 @@ public class VectorUtil {
 
     private VectorUtil() {}
 
+
     public static float[] toFloatArray(List<Double> vector) {
         if (vector == null) {
             return null;
@@ -45,6 +46,17 @@ public class VectorUtil {
         List<Double> vector = new ArrayList<>(floats.length);
         for (int i = 0; i < floats.length; i++) {
             vector.add(Double.parseDouble(String.valueOf(floats[i])));
+        }
+        return vector;
+    }
+
+    public static List<Float> convertToList(float[] floats) {
+        if (floats == null) {
+            return null;
+        }
+        List<Float> vector = new ArrayList<>(floats.length);
+        for (int i = 0; i < floats.length; i++) {
+            vector.add(Float.parseFloat(String.valueOf(floats[i])));
         }
         return vector;
     }

@@ -48,4 +48,22 @@ public class StringUtil {
         }
         return "\"" + object + "\"";
     }
+
+    /**
+     * Is the given string not {@code null} and not blank?
+     * @param string The string to check.
+     * @return true if there's something in the string.
+     */
+    public static boolean isNotNullOrBlank(String string) {
+        return !isNullOrBlank(string);
+    }
+
+    /**
+     * Is the given string {@code null} or blank?
+     * @param string The string to check.
+     * @return true if the string is {@code null} or blank.
+     */
+    public static boolean isNullOrBlank(String string) {
+        return string == null || string.trim().isEmpty();
+    }
 }

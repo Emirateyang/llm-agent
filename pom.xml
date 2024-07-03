@@ -26,6 +26,7 @@
     <modules>
         <module>llm-agent-core</module>
         <module>llm-agent-vector</module>
+        <module>llm-agent-openai</module>
     </modules>
 
     <properties>
@@ -43,6 +44,9 @@
         <postgresql.version>42.7.2</postgresql.version>
         <pgvector.version>0.1.4</pgvector.version>
         <spring-framework.version>6.1.4</spring-framework.version>
+        <retrofit.version>2.11.0</retrofit.version>
+        <jtokkit.version>1.0.0</jtokkit.version>
+        <gson.version>2.11.0</gson.version>
     </properties>
 
     <dependencyManagement>
@@ -62,7 +66,7 @@
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>fastjson</artifactId>
-                <version>2.0.51</version>
+                <version>${fastjson.version}</version>
             </dependency>
 
             <dependency>

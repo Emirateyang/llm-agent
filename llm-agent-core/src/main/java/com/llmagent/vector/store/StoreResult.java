@@ -16,9 +16,8 @@
 package com.llmagent.vector.store;
 
 import com.llmagent.data.Metadata;
-import com.llmagent.document.Document;
+import com.llmagent.data.document.Document;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class StoreResult extends Metadata {

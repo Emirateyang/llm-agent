@@ -23,13 +23,13 @@ import java.util.stream.Collectors;
 
 public class VectorData extends Metadata {
 
-    private List<Double> embedding = new ArrayList<>();
+    private List<Float> embedding = new ArrayList<>();
 
-    public List<Double> getEmbedding() {
+    public List<Float> getEmbedding() {
         return embedding;
     }
 
-    public void setEmbedding(List<Double> embedding) {
+    public void setEmbedding(List<Float> embedding) {
         this.embedding = embedding;
     }
 

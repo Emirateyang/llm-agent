@@ -15,10 +15,10 @@
  */
 package com.llmagent.vector.store;
 
-import com.llmagent.document.Document;
-import com.llmagent.document.id.DocumentIdGenerator;
-import com.llmagent.document.id.DocumentIdGeneratorFactory;
-import com.llmagent.document.DocumentSplitter;
+import com.llmagent.data.document.Document;
+import com.llmagent.data.document.id.DocumentIdGenerator;
+import com.llmagent.data.document.id.DocumentIdGeneratorFactory;
+import com.llmagent.data.document.DocumentSplitter;
 import com.llmagent.llm.embedding.EmbeddingModel;
 
 import java.util.Collection;
@@ -99,7 +99,7 @@ public abstract class DocumentStore extends VectorStore<Document> {
         }
 
         if (wrapper.getEmbedding() == null && embeddingModel != null && wrapper.isWithVector()) {
-            VectorData vectorData = embeddingModel.embed(Document.of(wrapper.getText()), options.getEmbeddingOptions());
+            VectorData vectorData = embeddingModel.embed(Document.of(wrapper.getText())).content();
             if (vectorData != null) {
                 wrapper.setEmbedding(vectorData.getEmbedding());
             }
@@ -115,7 +115,7 @@ public abstract class DocumentStore extends VectorStore<Document> {
         }
         for (Document document : documents) {
             if (document.getEmbedding() == null) {
-                VectorData vectorData = embeddingModel.embed(document, options.getEmbeddingOptions());
+                VectorData vectorData = embeddingModel.embed(document).content();
                 if (vectorData != null) {
                     document.setEmbedding(vectorData.getEmbedding());
                 }

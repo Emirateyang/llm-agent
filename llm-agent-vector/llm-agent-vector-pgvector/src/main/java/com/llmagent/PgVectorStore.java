@@ -16,7 +16,7 @@
 package com.llmagent;
 
 import com.llmagent.data.Metadata;
-import com.llmagent.document.Document;
+import com.llmagent.data.document.Document;
 import com.llmagent.util.StringUtil;
 import com.llmagent.util.VectorUtil;
 import com.llmagent.vector.store.DocumentStore;
@@ -86,7 +86,9 @@ public class PgVectorStore extends DocumentStore {
             if (createTable) {
                 query = String.format("CREATE TABLE IF NOT EXISTS %s (id varchar(64) PRIMARY KEY, " +
                                 "embedding vector(%s), content TEXT NULL, %s )",
-                        tableName, this.getEmbeddingModel().dimensions(),
+                        tableName,
+//                        this.getEmbeddingModel().dimensions(),
+                        1536,
                         metadataHandler.columnDefinitionsString());
                 statement.executeUpdate(query);
                 metadataHandler.createMetadataIndexes(statement, tableName);
@@ -174,7 +176,7 @@ public class PgVectorStore extends DocumentStore {
     public List<Document> searchImplement(SearchWrapper searchWrapper, StoreOptions options) {
         String tableName = this.schema + "." + this.table;
         try (Connection connection = getConnection()) {
-            String referenceVector = Arrays.toString(VectorUtil.toFloatArray(searchWrapper.getEmbedding()));
+            String referenceVector = Arrays.toString(searchWrapper.getEmbedding().toArray());
 //            String whereClause = (filter == null) ? "" : metadataHandler.whereClause(filter);
             String whereClause = "";
             whereClause = (whereClause.isEmpty()) ? "" : "WHERE " + whereClause;
@@ -192,7 +194,7 @@ public class PgVectorStore extends DocumentStore {
                         doc.setId(resultSet.getString("id"));
 
                         PGvector vector = (PGvector) resultSet.getObject("embedding");
-                        doc.setEmbedding(VectorUtil.convertToVector(vector.toArray()));
+                        doc.setEmbedding(VectorUtil.convertToList(vector.toArray()));
                         doc.setContent(resultSet.getString("content"));
                         Metadata metadata = metadataHandler.fromResultSet(resultSet);
                         doc.setMetadata(metadata.toMap());

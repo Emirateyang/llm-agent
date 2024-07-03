@@ -1,11 +1,18 @@
 package com.llmagent.data.message;
 
-import java.util.List;
+import com.llmagent.data.Role;
+import com.llmagent.util.StringUtil;
 
+import java.util.List;
+import java.util.Objects;
+
+import static com.llmagent.data.message.ChatMessageType.USER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
 public class UserMessage implements ChatMessage {
+
+    private final Role role = Role.USER;
 
     private final String name;
     private final List<Content> contents;
@@ -43,7 +50,7 @@ public class UserMessage implements ChatMessage {
      *
      * @param contents the contents.
      */
-public UserMessage(List<Content> contents) {
+    public UserMessage(List<Content> contents) {
         this.name = null;
         this.contents = unmodifiableList(contents);
     }
@@ -55,9 +62,9 @@ public UserMessage(List<Content> contents) {
      * @param name     the name.
      * @param contents the contents.
      */
-public UserMessage(String name, List<Content> contents) {
-        this.name = ensureNotBlank(name, "name");
-        this.contents = unmodifiableList(ensureNotEmpty(contents, "contents"));
+    public UserMessage(String name, List<Content> contents) {
+        this.name = name;
+        this.contents = contents;
     }
 
     /**
@@ -67,6 +74,10 @@ public UserMessage(String name, List<Content> contents) {
      */
     public String name() {
         return name;
+    }
+
+    public Role role() {
+        return role;
     }
 
     /**
@@ -139,7 +150,7 @@ public UserMessage(String name, List<Content> contents) {
     @Override
     public String toString() {
         return "UserMessage {" +
-                " name = " + quoted(name) +
+                " name = " + StringUtil.quoted(name) +
                 " contents = " + contents +
                 " }";
     }

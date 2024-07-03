@@ -15,17 +15,26 @@
  */
 package com.llmagent.llm.embedding;
 
-import com.llmagent.document.Document;
+import com.llmagent.data.document.Document;
+import com.llmagent.llm.output.Response;
 import com.llmagent.vector.store.VectorData;
 
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Represents a model that can convert a given text into an embedding (vector representation of the text).
+ */
 public interface EmbeddingModel {
-    default VectorData embed(Document document) {
-        return embed(document, EmbeddingOptions.DEFAULT);
+
+    default Response<VectorData> embed(String text) {
+        return embed(Document.of(text));
     }
 
-    VectorData embed(Document document, EmbeddingOptions options);
-
-    default int dimensions() {
-        return embed(Document.of("dimensions")).getEmbedding().size();
+    default Response<VectorData> embed(Document document) {
+        Response<List<VectorData>> response = embedAll(Collections.singletonList(document));
+        return Response.from(response.content().get(0), response.tokenUsage(), response.finishReason());
     }
+
+    Response<List<VectorData>> embedAll(List<Document> documents);
 }

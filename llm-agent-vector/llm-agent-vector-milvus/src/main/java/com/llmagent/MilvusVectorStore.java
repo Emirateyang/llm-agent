@@ -17,7 +17,7 @@ package com.llmagent;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.llmagent.document.Document;
+import com.llmagent.data.document.Document;
 import com.llmagent.util.Maps;
 import com.llmagent.util.StringUtil;
 import com.llmagent.util.VectorUtil;
@@ -71,7 +71,7 @@ public class MilvusVectorStore extends DocumentStore {
             JSONObject dict = new JSONObject();
             dict.put("id", String.valueOf(doc.getId()));
             dict.put("content", doc.getContent());
-            dict.put("vector", VectorUtil.toFloatList(doc.getEmbedding()));
+            dict.put("vector", doc.getEmbedding());
 
             Map<String, Object> metaDataMap = doc.getMetadata();
             JSONObject jsonObject = JSON.parseObject(JSON.toJSONBytes(metaDataMap == null ? Collections.EMPTY_MAP : metaDataMap));
@@ -146,7 +146,7 @@ public class MilvusVectorStore extends DocumentStore {
         CreateCollectionReq.FieldSchema vector = CreateCollectionReq.FieldSchema.builder()
                 .name("vector")
                 .dataType(DataType.FloatVector)
-                .dimension(this.getEmbeddingModel().dimensions())
+//                .dimension(this.getEmbeddingModel().dimensions())
                 .build();
         fieldSchemaList.add(vector);
 
@@ -259,7 +259,7 @@ public class MilvusVectorStore extends DocumentStore {
                 .outputFields(outputFields)
                 .topK(searchWrapper.getMaxResults())
                 .annsField("vector")
-                .data(Collections.singletonList(VectorUtil.toFloatList(searchWrapper.getEmbedding())))
+                .data(Collections.singletonList(searchWrapper.getEmbedding()))
                 .filter(searchWrapper.toFilterExpression(MilvusExpressionAdaptor.DEFAULT))
                 .build();
 
@@ -281,7 +281,7 @@ public class MilvusVectorStore extends DocumentStore {
                     Object vectorObj = entity.get("vector");
                     if (vectorObj instanceof List) {
                         //noinspection unchecked
-                        doc.setEmbedding(VectorUtil.convertToVector((List<Float>) vectorObj));
+                        doc.setEmbedding((List<Float>) vectorObj);
                     }
 
                     doc.setContent((String) entity.get("content"));

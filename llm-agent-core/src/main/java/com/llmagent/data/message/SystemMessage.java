@@ -1,5 +1,6 @@
 package com.llmagent.data.message;
 
+import com.llmagent.data.Role;
 import com.llmagent.util.StringUtil;
 
 import java.util.Objects;
@@ -8,22 +9,28 @@ import static com.llmagent.data.message.ChatMessageType.SYSTEM;
 
 public class SystemMessage implements ChatMessage {
 
-    private final String text;
+    private final Role role = Role.SYSTEM;
+
+    private final String content;
 
     /**
      * Creates a new system message.
-     * @param text the message text.
+     * @param content the message text.
      */
-    public SystemMessage(String text) {
-        this.text = text;
+    public SystemMessage(String content) {
+        this.content = content;
     }
 
     /**
      * Returns the message text.
      * @return the message text.
      */
-    public String text() {
-        return text;
+    public String content() {
+        return content;
+    }
+
+    public Role role() {
+        return role;
     }
 
     @Override
@@ -36,18 +43,18 @@ public class SystemMessage implements ChatMessage {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SystemMessage that = (SystemMessage) o;
-        return Objects.equals(this.text, that.text);
+        return Objects.equals(this.content, that.content);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(text);
+        return Objects.hash(content);
     }
 
     @Override
     public String toString() {
         return "SystemMessage {" +
-                " text = " + StringUtil.quoted(text) +
+                " content = " + StringUtil.quoted(content) +
                 " }";
     }
 

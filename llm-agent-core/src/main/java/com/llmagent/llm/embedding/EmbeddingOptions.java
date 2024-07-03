@@ -21,7 +21,7 @@ public class EmbeddingOptions {
     public static final EmbeddingOptions DEFAULT = new EmbeddingOptions(){
         @Override
         public void setModel(String model) {
-            throw new IllegalStateException("Can not set modal to the default instance.");
+            throw new IllegalStateException("Can not set model to the default instance.");
         }
     };
 
