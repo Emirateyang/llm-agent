@@ -54,17 +54,10 @@ public class DefaultOpenAiClient extends OpenAiClient {
                 .readTimeout(serviceBuilder.readTimeout)
                 .writeTimeout(serviceBuilder.writeTimeout);
 
-        if (serviceBuilder.openAiApiKey == null && serviceBuilder.azureApiKey == null) {
-            throw new IllegalArgumentException("openAiApiKey OR azureApiKey must be defined");
+        if (serviceBuilder.openAiApiKey == null) {
+            throw new IllegalArgumentException("openAiApiKey must be defined");
         }
-        if (serviceBuilder.openAiApiKey != null && serviceBuilder.azureApiKey != null) {
-            throw new IllegalArgumentException("openAiApiKey AND azureApiKey cannot both be defined at the same time");
-        }
-        if (serviceBuilder.openAiApiKey != null) {
-            okHttpClientBuilder.addInterceptor(new AuthorizationHeaderInjector(serviceBuilder.openAiApiKey));
-        } else {
-            okHttpClientBuilder.addInterceptor(new ApiKeyHeaderInjector(serviceBuilder.azureApiKey));
-        }
+        okHttpClientBuilder.addInterceptor(new AuthorizationHeaderInjector(serviceBuilder.openAiApiKey));
 
         Map<String, String> headers = new HashMap<>();
         if (serviceBuilder.organizationId != null) {

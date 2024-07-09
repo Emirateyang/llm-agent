@@ -11,7 +11,7 @@ import com.llmagent.openai.chat.*;
 import com.llmagent.llm.chat.listener.ChatModelRequest;
 import com.llmagent.llm.chat.listener.ChatModelResponse;
 import com.llmagent.llm.output.FinishReason;
-import com.llmagent.llm.output.Response;
+import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.llm.output.TokenUsage;
 import com.llmagent.openai.chat.AssistantMessage;
 import com.llmagent.openai.chat.ChatCompletionResponse;
@@ -29,6 +29,9 @@ import java.util.List;
 import static com.llmagent.exception.Exceptions.illegalArgument;
 import static java.util.stream.Collectors.toList;
 
+/**
+ * 将 LLM 消息转换为 OpenAI 消息
+ */
 public class OpenAiHelper {
     static final String OPENAI_URL = "https://api.openai.com/v1";
 
@@ -45,12 +48,10 @@ public class OpenAiHelper {
             return com.llmagent.openai.chat.SystemMessage.from(((SystemMessage) message).content());
         }
 
-        if (message instanceof UserMessage) {
-            UserMessage userMessage = (UserMessage) message;
-
+        if (message instanceof UserMessage userMessage) {
             if (userMessage.hasSingleText()) {
                 return com.llmagent.openai.chat.UserMessage.builder()
-                        .content(userMessage.text())
+                        .content(userMessage.singleText())
                         .name(userMessage.name())
                         .build();
             } else {
@@ -63,13 +64,10 @@ public class OpenAiHelper {
             }
         }
 
-        if (message instanceof AiMessage) {
-            AiMessage aiMessage = (AiMessage) message;
-
+        if (message instanceof AiMessage aiMessage) {
             if (!aiMessage.hasToolRequests()) {
                 return AssistantMessage.from(aiMessage.content());
             }
-
 
             List<ToolCall> toolCalls = aiMessage.toolRequests().stream()
                     .map(it -> ToolCall.builder()
@@ -87,9 +85,7 @@ public class OpenAiHelper {
                     .build();
         }
 
-        if (message instanceof ToolMessage) {
-            ToolMessage toolMessage = (ToolMessage) message;
-
+        if (message instanceof ToolMessage toolMessage) {
             return com.llmagent.openai.chat.ToolMessage.from(toolMessage.id(), toolMessage.content());
         }
 
@@ -228,8 +224,8 @@ public class OpenAiHelper {
         return false;
     }
 
-    static Response<AiMessage> removeTokenUsage(Response<AiMessage> response) {
-        return Response.from(response.content(), null, response.finishReason());
+    static LlmResponse<AiMessage> removeTokenUsage(LlmResponse<AiMessage> response) {
+        return LlmResponse.from(response.content(), null, response.finishReason());
     }
 
     static ChatModelRequest createModelListenerRequest(ChatCompletionRequest request,
@@ -247,7 +243,7 @@ public class OpenAiHelper {
 
     static ChatModelResponse createModelListenerResponse(String responseId,
                                                          String responseModel,
-                                                         Response<AiMessage> response) {
+                                                         LlmResponse<AiMessage> response) {
         if (response == null) {
             return null;
         }

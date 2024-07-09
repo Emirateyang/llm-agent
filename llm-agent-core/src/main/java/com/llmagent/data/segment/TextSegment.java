@@ -1,0 +1,120 @@
+package com.llmagent.data.segment;
+
+import com.llmagent.data.Metadata;
+
+import java.util.Objects;
+
+import static com.llmagent.util.StringUtil.quoted;
+
+public class TextSegment {
+
+    private final String text;
+    private final Metadata metadata;
+
+    /**
+     * Creates a new text segment.
+     *
+     * @param text     the text.
+     * @param metadata the metadata.
+     */
+    public TextSegment(String text, Metadata metadata) {
+        this.text = text;
+        this.metadata = metadata;
+    }
+
+    /**
+     * Returns the text.
+     *
+     * @return the text.
+     */
+    public String text() {
+        return text;
+    }
+
+    /**
+     * Returns the metadata.
+     *
+     * @return the metadata.
+     */
+    public Metadata metadata() {
+        return metadata;
+    }
+
+    /**
+     * Returns the metadata value for the given key.
+     *
+     * @param key the key.
+     * @return the metadata value, or null if not found.
+     * @deprecated as of 0.31.0, use {@link #metadata()} and then {@link Metadata#getString(String)},
+     * {@link Metadata#getInteger(String)}, {@link Metadata#getLong(String)}, {@link Metadata#getFloat(String)},
+     * {@link Metadata#getDouble(String)} instead.
+     */
+    @Deprecated
+    public String metadata(String key) {
+        return metadata.get(key);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TextSegment that = (TextSegment) o;
+        return Objects.equals(this.text, that.text)
+                && Objects.equals(this.metadata, that.metadata);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(text, metadata);
+    }
+
+    @Override
+    public String toString() {
+        return "TextSegment {" +
+                " text = " + quoted(text) +
+                " metadata = " + metadata.toMap() +
+                " }";
+    }
+
+    /**
+     * Creates a new text segment.
+     *
+     * @param text the text.
+     * @return the text segment.
+     */
+    public static TextSegment from(String text) {
+        return new TextSegment(text, new Metadata());
+    }
+
+    /**
+     * Creates a new text segment.
+     *
+     * @param text     the text.
+     * @param metadata the metadata.
+     * @return the text segment.
+     */
+    public static TextSegment from(String text, Metadata metadata) {
+        return new TextSegment(text, metadata);
+    }
+
+    /**
+     * Creates a new text segment.
+     *
+     * @param text the text.
+     * @return the text segment.
+     */
+    public static TextSegment textSegment(String text) {
+        return from(text);
+    }
+
+    /**
+     * Creates a new text segment.
+     *
+     * @param text     the text.
+     * @param metadata the metadata.
+     * @return the text segment.
+     */
+    public static TextSegment textSegment(String text, Metadata metadata) {
+        return from(text, metadata);
+    }
+}

@@ -3,6 +3,7 @@ package com.llmagent.llm.chat;
 import com.llmagent.data.document.Document;
 import com.llmagent.data.message.ChatMessage;
 import com.llmagent.data.message.UserMessage;
+import com.llmagent.data.segment.TextSegment;
 import com.llmagent.llm.input.Prompt;
 
 import java.util.Collections;
@@ -43,11 +44,11 @@ public interface TokenCountEstimator {
 
     /**
      * Estimates the count of tokens in the specified document.
-     * @param document the document
+     * @param textSegment the document
      * @return the estimated count of tokens
      */
-    default int estimateTokenCount(Document document) {
-        return estimateTokenCount(document.getContent());
+    default int estimateTokenCount(TextSegment textSegment) {
+        return estimateTokenCount(textSegment.text());
     }
 
     /**

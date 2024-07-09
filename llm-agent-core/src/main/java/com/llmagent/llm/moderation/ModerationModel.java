@@ -1,9 +1,9 @@
 package com.llmagent.llm.moderation;
 
-import com.llmagent.data.document.Document;
 import com.llmagent.data.message.ChatMessage;
+import com.llmagent.data.segment.TextSegment;
 import com.llmagent.llm.input.Prompt;
-import com.llmagent.llm.output.Response;
+import com.llmagent.llm.output.LlmResponse;
 
 import java.util.List;
 
@@ -14,14 +14,14 @@ public interface ModerationModel {
      * @param text the text to moderate.
      * @return the moderation {@code Response}.
      */
-    Response<Moderation> moderate(String text);
+    LlmResponse<Moderation> moderate(String text);
 
     /**
      * Moderates the given prompt.
      * @param prompt the prompt to moderate.
      * @return the moderation {@code Response}.
      */
-    default Response<Moderation> moderate(Prompt prompt) {
+    default LlmResponse<Moderation> moderate(Prompt prompt) {
         return moderate(prompt.text());
     }
 
@@ -30,14 +30,14 @@ public interface ModerationModel {
      * @param messages the list of chat messages to moderate.
      * @return the moderation {@code Response}.
      */
-    Response<Moderation> moderate(List<ChatMessage> messages);
+    LlmResponse<Moderation> moderate(List<ChatMessage> messages);
 
     /**
      * Moderates the given document.
-     * @param document the document to moderate.
+     * @param textSegment the document to moderate.
      * @return the moderation {@code Response}.
      */
-    default Response<Moderation> moderate(Document document) {
-        return moderate(document.getContent());
+    default LlmResponse<Moderation> moderate(TextSegment textSegment) {
+        return moderate(textSegment.text());
     }
 }

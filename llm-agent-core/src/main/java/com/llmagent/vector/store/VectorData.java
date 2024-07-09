@@ -15,29 +15,110 @@
  */
 package com.llmagent.vector.store;
 
-import com.llmagent.data.Metadata;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class VectorData extends Metadata {
+public class VectorData {
+    private final float[] vector;
+    private List<Float> embedding;
 
-    private List<Float> embedding = new ArrayList<>();
+    /**
+     * Creates a new Embedding.
+     * @param vector the vector, takes ownership of the array.
+     */
+    public VectorData(float[] vector) {
+        this.vector = vector;
+        this.embedding = vectorAsList();
+    }
 
-    public List<Float> getEmbedding() {
+    /**
+     * Returns the vector.
+     * @return the vector.
+     */
+    public float[] vector() {
+        return vector;
+    }
+
+    /**
+     * Returns a copy of the vector as a list.
+     * @return the vector as a list.
+     */
+    public List<Float> vectorAsList() {
+        List<Float> list = new ArrayList<>(vector.length);
+        for (float f : vector) {
+            list.add(f);
+        }
+        return list;
+    }
+
+    public List<Float> embedding() {
         return embedding;
     }
 
-    public void setEmbedding(List<Float> embedding) {
-        this.embedding = embedding;
+    /**
+     * Normalize vector
+     */
+    public void normalize() {
+        double norm = 0.0;
+        for (float f : vector) {
+            norm += f * f;
+        }
+        norm = Math.sqrt(norm);
+
+        for (int i = 0; i < vector.length; i++) {
+            vector[i] /= norm;
+        }
+    }
+
+    /**
+     * Returns the dimension of the vector.
+     * @return the dimension of the vector.
+     */
+    public int dimension() {
+        return vector.length;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VectorData that = (VectorData) o;
+        return Arrays.equals(this.vector, that.vector);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(vector);
     }
 
     @Override
     public String toString() {
-        return "VectorData{" +
-                "embedding=" + embedding.stream().map(String::valueOf).collect(Collectors.joining(",")) +
-                ", metaDataMap=" + metadata +
-                '}';
+        return "Embedding {" +
+                " vector = " + Arrays.toString(vector) +
+                " }";
+    }
+
+    /**
+     * Creates a new Embedding from the given vector.
+     * @param vector the vector, takes ownership of the array.
+     * @return the new Embedding.
+     */
+    public static VectorData from(float[] vector) {
+        return new VectorData(vector);
+    }
+
+    /**
+     * Creates a new Embedding from the given vector.
+     * @param vector the vector.
+     * @return the new Embedding.
+     */
+    public static VectorData from(List<Float> vector) {
+        float[] array = new float[vector.size()];
+        for (int i = 0; i < vector.size(); i++) {
+            array[i] = vector.get(i);
+        }
+        return new VectorData(array);
     }
 }

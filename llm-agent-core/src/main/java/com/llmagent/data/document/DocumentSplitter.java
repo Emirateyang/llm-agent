@@ -16,6 +16,7 @@
 package com.llmagent.data.document;
 
 import com.llmagent.data.document.id.DocumentIdGenerator;
+import com.llmagent.data.segment.TextSegment;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,14 +24,14 @@ import java.util.List;
 import static java.util.stream.Collectors.toList;
 
 public interface DocumentSplitter {
-    List<Document> split(Document text, DocumentIdGenerator idGenerator);
+    List<TextSegment> split(Document text);
 
-    default List<Document> splitAll(List<Document> documents, DocumentIdGenerator idGenerator) {
+    default List<TextSegment> splitAll(List<Document> documents) {
         if (documents == null || documents.isEmpty()) {
             return Collections.emptyList();
         }
         return documents.stream()
-                .flatMap(document -> split(document, idGenerator).stream())
+                .flatMap(document -> split(document).stream())
                 .collect(toList());
     }
 }

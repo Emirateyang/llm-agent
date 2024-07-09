@@ -2,7 +2,7 @@ package com.llmagent.openai;
 
 import com.llmagent.data.message.AiMessage;
 import com.llmagent.llm.Tokenizer;
-import com.llmagent.llm.output.Response;
+import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.llm.output.TokenUsage;
 import com.llmagent.openai.tool.FunctionCall;
 import com.llmagent.openai.tool.ToolCall;
@@ -122,11 +122,11 @@ public class OpenAiStreamingResponseBuilder {
         }
     }
 
-    public Response<AiMessage> build(Tokenizer tokenizer, boolean forcefulToolExecution) {
+    public LlmResponse<AiMessage> build(Tokenizer tokenizer, boolean forcefulToolExecution) {
 
         String content = contentBuilder.toString();
         if (!content.isEmpty()) {
-            return Response.from(
+            return LlmResponse.from(
                     AiMessage.from(content),
                     tokenUsage(content, tokenizer),
                     finishReasonFrom(finishReason)
@@ -139,7 +139,7 @@ public class OpenAiStreamingResponseBuilder {
                     .name(toolName)
                     .arguments(toolArgumentsBuilder.toString())
                     .build();
-            return Response.from(
+            return LlmResponse.from(
                     AiMessage.from(toolExecutionRequest),
                     tokenUsage(singletonList(toolExecutionRequest), tokenizer, forcefulToolExecution),
                     finishReasonFrom(finishReason)
@@ -154,7 +154,7 @@ public class OpenAiStreamingResponseBuilder {
                             .arguments(it.argumentsBuilder.toString())
                             .build())
                     .collect(toList());
-            return Response.from(
+            return LlmResponse.from(
                     AiMessage.from(toolRequests),
                     tokenUsage(toolRequests, tokenizer, forcefulToolExecution),
                     finishReasonFrom(finishReason)

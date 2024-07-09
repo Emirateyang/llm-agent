@@ -7,7 +7,7 @@ import com.llmagent.llm.Tokenizer;
 import com.llmagent.llm.chat.StreamingChatLanguageModel;
 import com.llmagent.llm.chat.TokenCountEstimator;
 import com.llmagent.llm.chat.listener.*;
-import com.llmagent.llm.output.Response;
+import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.llm.tool.ToolSpecification;
 import com.llmagent.openai.chat.*;
 import com.llmagent.openai.client.OpenAiClient;
@@ -186,7 +186,7 @@ public class OpenAiStreamingChatModel implements StreamingChatLanguageModel, Tok
                     }
                 })
                 .onComplete(() -> {
-                    Response<AiMessage> response = createResponse(responseBuilder, toolThatMustBeExecuted);
+                    LlmResponse<AiMessage> response = createResponse(responseBuilder, toolThatMustBeExecuted);
 
                     ChatModelResponse modelListenerResponse = createModelListenerResponse(
                             responseId.get(),
@@ -209,7 +209,7 @@ public class OpenAiStreamingChatModel implements StreamingChatLanguageModel, Tok
                     handler.onComplete(response);
                 })
                 .onError(error -> {
-                    Response<AiMessage> response = createResponse(responseBuilder, toolThatMustBeExecuted);
+                    LlmResponse<AiMessage> response = createResponse(responseBuilder, toolThatMustBeExecuted);
 
                     ChatModelResponse modelListenerPartialResponse = createModelListenerResponse(
                             responseId.get(),
@@ -237,9 +237,9 @@ public class OpenAiStreamingChatModel implements StreamingChatLanguageModel, Tok
                 .execute();
     }
 
-    private Response<AiMessage> createResponse(OpenAiStreamingResponseBuilder responseBuilder,
-                                               ToolSpecification toolThatMustBeExecuted) {
-        Response<AiMessage> response = responseBuilder.build(tokenizer, toolThatMustBeExecuted != null);
+    private LlmResponse<AiMessage> createResponse(OpenAiStreamingResponseBuilder responseBuilder,
+                                                  ToolSpecification toolThatMustBeExecuted) {
+        LlmResponse<AiMessage> response = responseBuilder.build(tokenizer, toolThatMustBeExecuted != null);
         if (isOpenAiModel) {
             return response;
         }

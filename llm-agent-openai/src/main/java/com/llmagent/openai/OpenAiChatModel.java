@@ -11,7 +11,7 @@ import com.llmagent.openai.exception.OpenAiHttpException;
 import com.llmagent.llm.Tokenizer;
 import com.llmagent.llm.chat.ChatLanguageModel;
 import com.llmagent.llm.chat.TokenCountEstimator;
-import com.llmagent.llm.output.Response;
+import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.llm.tool.ToolSpecification;
 import com.llmagent.util.ObjectUtil;
 import lombok.Builder;
@@ -95,7 +95,7 @@ public class OpenAiChatModel implements ChatLanguageModel, TokenCountEstimator {
                 .customHeaders(customHeaders)
                 .build();
         this.modelName = ObjectUtil.getOrDefault(modelName, ChatCompletionModel.GPT_3_5_TURBO.toString());
-        this.temperature = ObjectUtil.getOrDefault(temperature, 0.7);
+        this.temperature = ObjectUtil.getOrDefault(temperature, 0.2);
         this.topP = topP;
         this.stop = stop;
         this.maxTokens = maxTokens;
@@ -115,24 +115,23 @@ public class OpenAiChatModel implements ChatLanguageModel, TokenCountEstimator {
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages) {
+    public LlmResponse<AiMessage> generate(List<ChatMessage> messages) {
         return generate(messages, null, null);
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
+    public LlmResponse<AiMessage> generate(List<ChatMessage> messages, List<ToolSpecification> toolSpecifications) {
         return generate(messages, toolSpecifications, null);
     }
 
     @Override
-    public Response<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
+    public LlmResponse<AiMessage> generate(List<ChatMessage> messages, ToolSpecification toolSpecification) {
         return generate(messages, singletonList(toolSpecification), toolSpecification);
     }
 
-    private Response<AiMessage> generate(List<ChatMessage> messages,
-                                         List<ToolSpecification> toolSpecifications,
-                                         ToolSpecification toolThatMustBeExecuted
-    ) {
+    private LlmResponse<AiMessage> generate(List<ChatMessage> messages,
+                                            List<ToolSpecification> toolSpecifications,
+                                            ToolSpecification toolThatMustBeExecuted) {
         ChatCompletionRequest.Builder requestBuilder = ChatCompletionRequest.builder()
                 .model(modelName)
                 .messages(toOpenAiMessages(messages))
@@ -170,7 +169,7 @@ public class OpenAiChatModel implements ChatLanguageModel, TokenCountEstimator {
         try {
             ChatCompletionResponse chatCompletionResponse = withRetry(() -> client.chatCompletion(request).execute(), maxRetries);
 
-            Response<AiMessage> response = Response.from(
+            LlmResponse<AiMessage> response = LlmResponse.from (
                     aiMessageFrom(chatCompletionResponse),
                     tokenUsageFrom(chatCompletionResponse.usage()),
                     finishReasonFrom(chatCompletionResponse.choices().get(0).finishReason())

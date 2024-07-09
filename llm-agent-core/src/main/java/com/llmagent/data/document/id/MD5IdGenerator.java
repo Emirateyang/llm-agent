@@ -27,6 +27,6 @@ public class MD5IdGenerator implements DocumentIdGenerator {
      */
     @Override
     public String generateId(Document document) {
-        return document.getContent() != null ? HashUtil.md5(document.getContent()) : null;
+        return document.text() != null ? HashUtil.md5(document.text()) : null;
     }
 }

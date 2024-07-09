@@ -29,8 +29,8 @@ public class DefaultMetadataStorageConfig implements MetadataStorageConfig {
      */
     public static MetadataStorageConfig defaultConfig() {
         return DefaultMetadataStorageConfig.builder()
-                .storageMode(MetadataStorageMode.JSONB)
-                .columnDefinitions(Collections.singletonList("metadata JSONB NULL"))
+                .storageMode(MetadataStorageMode.JSON)
+                .columnDefinitions(Collections.singletonList("metadata JSON NULL"))
                 .build();
     }
 

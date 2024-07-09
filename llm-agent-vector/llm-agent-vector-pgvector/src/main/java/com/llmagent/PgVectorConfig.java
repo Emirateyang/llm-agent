@@ -24,13 +24,29 @@ public class PgVectorConfig implements Serializable {
     private String username;
     private String password;
     private boolean dropTableIfExist = false;
-    private boolean createTable = true;
+    private boolean needCreateTable = true;
 
     private Integer indexListSize = 150;
 
     private String schemaName = "public";
 
+    private Integer dimension = 1536;
+
     public PgVectorConfig() {
+    }
+
+    public PgVectorConfig(String host, Integer port, String databaseName, String username, String password,
+                          boolean dropTableIfExist, boolean needCreateTable, Integer indexListSize, String schemaName, Integer dimension) {
+        this.host = host;
+        this.port = port;
+        this.databaseName = databaseName;
+        this.username = username;
+        this.password = password;
+        this.dropTableIfExist = dropTableIfExist;
+        this.needCreateTable = needCreateTable;
+        this.indexListSize = indexListSize;
+        this.schemaName = schemaName;
+        this.dimension = dimension;
     }
 
     public String getHost() {
@@ -57,7 +73,6 @@ public class PgVectorConfig implements Serializable {
         this.databaseName = databaseName;
     }
 
-
     public String getUsername() {
         return username;
     }
@@ -82,12 +97,12 @@ public class PgVectorConfig implements Serializable {
         this.dropTableIfExist = dropTableIfExist;
     }
 
-    public boolean isCreateTable() {
-        return createTable;
+    public boolean isNeedCreateTable() {
+        return needCreateTable;
     }
 
-    public void setCreateTable(boolean createTable) {
-        this.createTable = createTable;
+    public void setNeedCreateTable(boolean needCreateTable) {
+        this.needCreateTable = needCreateTable;
     }
 
     public Integer getIndexListSize() {
@@ -104,5 +119,80 @@ public class PgVectorConfig implements Serializable {
 
     public void setSchemaName(String schemaName) {
         this.schemaName = schemaName;
+    }
+
+    public Integer getDimension() {
+        return dimension;
+    }
+
+    public void setDimension(Integer dimension) {
+        this.dimension = dimension;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String host;
+        private Integer port;
+        private String databaseName = "llmagent";
+        private String username;
+        private String password;
+        private boolean dropTableIfExist = false;
+        private boolean needCreateTable = true;
+
+        private Integer indexListSize = 150;
+
+        private String schemaName = "public";
+
+        private Integer dimension = 1536;
+
+        public Builder host(String host) {
+            this.host = host;
+            return this;
+        }
+        public Builder port(Integer port) {
+            this.port = port;
+            return this;
+        }
+        public Builder databaseName(String databaseName) {
+            this.databaseName = databaseName;
+            return this;
+        }
+        public Builder username(String username) {
+            this.username = username;
+            return this;
+        }
+        public Builder password(String password) {
+            this.password = password;
+            return this;
+        }
+        public Builder dropTableIfExist(boolean dropTableIfExist) {
+            this.dropTableIfExist = dropTableIfExist;
+            return this;
+        }
+        public Builder needCreateTable(boolean needCreateTable) {
+            this.needCreateTable = needCreateTable;
+            return this;
+        }
+        public Builder indexListSize(Integer indexListSize) {
+            this.indexListSize = indexListSize;
+            return this;
+        }
+        public Builder schemaName(String schemaName) {
+            this.schemaName = schemaName;
+            return this;
+        }
+
+        public Builder dimension(Integer dimension) {
+            this.dimension = dimension;
+            return this;
+        }
+
+        public PgVectorConfig build() {
+            return new PgVectorConfig(host, port, databaseName, username, password, dropTableIfExist, needCreateTable,
+                    indexListSize, schemaName, dimension);
+        }
     }
 }

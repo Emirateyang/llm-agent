@@ -1,7 +1,7 @@
 package com.llmagent.llm.image;
 
 import com.llmagent.data.image.Image;
-import com.llmagent.llm.output.Response;
+import com.llmagent.llm.output.LlmResponse;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public interface ImageModel {
      * @param prompt The prompt to generate an image from.
      * @return The generated image Response.
      */
-    Response<Image> generate(String prompt);
+    LlmResponse<Image> generate(String prompt);
 
     /**
      * Given a prompt, generate n images.
@@ -27,7 +27,7 @@ public interface ImageModel {
      * @return The generated images Response.
      * @throws IllegalArgumentException if the operation is not supported.
      */
-    default Response<List<Image>> generate(String prompt, int n) {
+    default LlmResponse<List<Image>> generate(String prompt, int n) {
         throw new IllegalArgumentException("Operation is not supported");
     }
 
@@ -38,7 +38,7 @@ public interface ImageModel {
      * @param prompt The prompt to edit the image.
      * @return The generated image Response.
      */
-    default Response<Image> edit(Image image, String prompt) {
+    default LlmResponse<Image> edit(Image image, String prompt) {
         throw new IllegalArgumentException("Operation is not supported");
     }
 
@@ -51,7 +51,7 @@ public interface ImageModel {
      * @param prompt The prompt to edit the image.
      * @return The generated image Response.
      */
-    default Response<Image> edit(Image image, Image mask, String prompt) {
+    default LlmResponse<Image> edit(Image image, Image mask, String prompt) {
         throw new IllegalArgumentException("Operation is not supported");
     }
 }

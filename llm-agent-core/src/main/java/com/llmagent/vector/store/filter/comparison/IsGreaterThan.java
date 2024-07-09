@@ -1,18 +1,20 @@
 package com.llmagent.vector.store.filter.comparison;
 
 import com.llmagent.data.Metadata;
-import com.llmagent.util.NumberComparator;
 import com.llmagent.util.ValidationUtil;
 import com.llmagent.vector.store.filter.Filter;
 import lombok.EqualsAndHashCode;
 
+import static com.llmagent.util.NumberComparator.compareAsBigDecimals;
+import static com.llmagent.vector.store.filter.comparison.TypeChecker.ensureTypesAreCompatible;
+
 @EqualsAndHashCode
-public class IsNotEqualTo implements Filter {
+public class IsGreaterThan implements Filter {
 
     private final String key;
-    private final Object comparisonValue;
+    private final Comparable<?> comparisonValue;
 
-    public IsNotEqualTo(String key, Object comparisonValue) {
+    public IsGreaterThan(String key, Comparable<?> comparisonValue) {
         this.key = ValidationUtil.ensureNotBlank(key, "key");
         this.comparisonValue = ValidationUtil.ensureNotNull(comparisonValue, "comparisonValue with key '" + key + "'");
     }
@@ -21,7 +23,7 @@ public class IsNotEqualTo implements Filter {
         return key;
     }
 
-    public Object comparisonValue() {
+    public Comparable<?> comparisonValue() {
         return comparisonValue;
     }
 
@@ -33,20 +35,16 @@ public class IsNotEqualTo implements Filter {
 
         Metadata metadata = (Metadata) object;
         if (!metadata.containsKey(key)) {
-            return true;
+            return false;
         }
 
         Object actualValue = metadata.toMap().get(key);
-        TypeChecker.ensureTypesAreCompatible(actualValue, comparisonValue, key);
+        ensureTypesAreCompatible(actualValue, comparisonValue, key);
 
         if (actualValue instanceof Number) {
-            return NumberComparator.compareAsBigDecimals(actualValue, comparisonValue) != 0;
+            return compareAsBigDecimals(actualValue, comparisonValue) > 0;
         }
 
-        if (actualValue instanceof String) {
-            return !actualValue.equals(comparisonValue.toString());
-        }
-
-        return !actualValue.equals(comparisonValue);
+        return ((Comparable) actualValue).compareTo(comparisonValue) > 0;
     }
 }

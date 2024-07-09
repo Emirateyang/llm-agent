@@ -1,14 +1,11 @@
 package com.llmagent;
 
-import com.alibaba.fastjson.JSON;
 import com.llmagent.data.Metadata;
+import com.llmagent.util.JsonUtil;
 import com.llmagent.util.ValidationUtil;
 import com.llmagent.vector.store.filter.Filter;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +20,7 @@ public class JSONMetadataHandler implements MetadataHandler {
 
     public JSONMetadataHandler(MetadataStorageConfig config) {
         List<String> definition = ValidationUtil.ensureNotEmpty(config.columnDefinitions(), "Metadata definition");
-        if (definition.size()>1) {
+        if (definition.size() > 1) {
             throw new IllegalArgumentException("Metadata definition should be an unique column definition, " +
                     "example: metadata JSON NULL");
         }
@@ -60,7 +57,7 @@ public class JSONMetadataHandler implements MetadataHandler {
     public Metadata fromResultSet(ResultSet resultSet) {
         try {
             String metadataJson = resultSet.getString(columnsNames().get(0)) != null? resultSet.getString(columnsNames().get(0)) : "{}";
-            return new Metadata(JSON.parseObject(metadataJson, Map.class));
+            return new Metadata(JsonUtil.fromJson(metadataJson, Map.class));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -74,7 +71,7 @@ public class JSONMetadataHandler implements MetadataHandler {
     @Override
     public void setMetadata(PreparedStatement upsertStmt, Integer parameterInitialIndex, Metadata metadata) {
         try {
-            upsertStmt.setObject(parameterInitialIndex, JSON.toJSONString(metadata.toMap()));
+            upsertStmt.setObject(parameterInitialIndex, JsonUtil.toJson(metadata.toMap()), Types.OTHER);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

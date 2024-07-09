@@ -17,7 +17,7 @@ package com.llmagent.data.document.splitter;
 
 import com.llmagent.data.document.Document;
 import com.llmagent.data.document.DocumentSplitter;
-import com.llmagent.data.document.id.DocumentIdGenerator;
+import com.llmagent.data.segment.TextSegment;
 import com.llmagent.util.StringUtil;
 
 import java.util.ArrayList;
@@ -39,22 +39,17 @@ public class RecursiveCharacterTextSplitter implements DocumentSplitter {
     }
 
     @Override
-    public List<Document> split(Document document, DocumentIdGenerator idGenerator) {
-        if (document == null || StringUtil.noText(document.getContent())) {
+    public List<TextSegment> split(Document document) {
+        if (document == null || StringUtil.noText(document.text())) {
             return Collections.emptyList();
         }
 
-        List<String> chunks = splitText(document.getContent());
+        List<String> chunks = splitText(document.text());
 
-        List<Document> texts = new ArrayList<>(chunks.size());
+        List<TextSegment> texts = new ArrayList<>(chunks.size());
         for (String textString : chunks) {
-            Document newDocument = new Document();
-            newDocument.addMetadata(document.getMetadata());
-            newDocument.setContent(textString);
-
-            //we should invoke setId after setContent
-            newDocument.setId(idGenerator == null ? null : idGenerator.generateId(newDocument));
-            texts.add(newDocument);
+            TextSegment segment = new TextSegment(textString, document.metadata());
+            texts.add(segment);
         }
         return texts;
     }

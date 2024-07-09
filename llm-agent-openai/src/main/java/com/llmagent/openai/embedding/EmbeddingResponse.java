@@ -34,7 +34,7 @@ public final class EmbeddingResponse {
      * Convenience method to get the embedding from the first data.
      */
     public List<Float> embedding() {
-        return data.get(0).getEmbedding();
+        return data.get(0).vectorAsList();
     }
 
     @Override

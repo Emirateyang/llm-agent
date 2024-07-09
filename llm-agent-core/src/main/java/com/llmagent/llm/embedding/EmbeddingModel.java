@@ -15,8 +15,8 @@
  */
 package com.llmagent.llm.embedding;
 
-import com.llmagent.data.document.Document;
-import com.llmagent.llm.output.Response;
+import com.llmagent.data.segment.TextSegment;
+import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.vector.store.VectorData;
 
 import java.util.Collections;
@@ -27,14 +27,23 @@ import java.util.List;
  */
 public interface EmbeddingModel {
 
-    default Response<VectorData> embed(String text) {
-        return embed(Document.of(text));
+    default LlmResponse<VectorData> embed(String text) {
+        return embed(TextSegment.from(text));
     }
 
-    default Response<VectorData> embed(Document document) {
-        Response<List<VectorData>> response = embedAll(Collections.singletonList(document));
-        return Response.from(response.content().get(0), response.tokenUsage(), response.finishReason());
+    default LlmResponse<VectorData> embed(TextSegment textSegment) {
+        LlmResponse<List<VectorData>> response = embedAll(Collections.singletonList(textSegment));
+        return LlmResponse.from(response.content().get(0), response.tokenUsage(), response.finishReason());
     }
 
-    Response<List<VectorData>> embedAll(List<Document> documents);
+    LlmResponse<List<VectorData>> embedAll(List<TextSegment> documents);
+
+    /**
+     * Returns the dimension of the {@link VectorData} produced by this embedding model.
+     *
+     * @return dimension of the embedding
+     */
+    default int dimension() {
+        return embed("test").content().dimension();
+    }
 }

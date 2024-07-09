@@ -15,65 +15,158 @@
  */
 package com.llmagent.data.document;
 
-import com.llmagent.vector.store.VectorData;
+import com.llmagent.data.Metadata;
+import com.llmagent.data.segment.TextSegment;
 
-import java.util.Map;
+import java.util.Objects;
 
-public class Document extends VectorData {
+import static com.llmagent.util.StringUtil.quoted;
+
+public class Document {
+    /**
+     * Common metadata key for the name of the file from which the document was loaded.
+     */
+    public static final String FILE_NAME = "file_name";
+    /**
+     * Common metadata key for the absolute path of the directory from which the document was loaded.
+     */
+    public static final String ABSOLUTE_DIRECTORY_PATH = "absolute_directory_path";
+    /**
+     * Common metadata key for the URL from which the document was loaded.
+     */
+    public static final String URL = "url";
+
+    private final String text;
+    private final Metadata metadata;
 
     /**
-     * Document ID
+     * Creates a new Document from the given text.
+     *
+     * <p>The created document will have empty metadata.
+     *
+     * @param text the text of the document.
      */
-    private String id;
+    public Document(String text) {
+        this(text, new Metadata());
+    }
 
     /**
-     * Document Content
+     * Creates a new Document from the given text.
+     *
+     * @param text     the text of the document.
+     * @param metadata the metadata of the document.
      */
-    private String content;
-
-    private double score;
-
-
-    public Document() {
+    public Document(String text, Metadata metadata) {
+        this.text = text;
+        this.metadata = metadata;
     }
 
-    public Document(String content) {
-        this.content = content;
+    /**
+     * Returns the text of this document.
+     *
+     * @return the text.
+     */
+    public String text() {
+        return text;
     }
 
-    public Document(String id, String content, Map<String, Object> metadata) {
-        this.id = id;
-        this.content = content;
-        super.metadata = metadata;
+    /**
+     * Returns the metadata associated with this document.
+     *
+     * @return the metadata.
+     */
+    public Metadata metadata() {
+        return metadata;
     }
 
-    public String getId() {
-        return id;
+    /**
+     * Looks up the metadata value for the given key.
+     *
+     * @param key the key to look up.
+     * @return the metadata value for the given key, or null if the key is not present.
+     * @deprecated as of 0.31.0, use {@link #metadata()} and then {@link Metadata#getString(String)},
+     * {@link Metadata#getInteger(String)}, {@link Metadata#getLong(String)}, {@link Metadata#getFloat(String)},
+     * {@link Metadata#getDouble(String)} instead.
+     */
+    @Deprecated
+    public String metadata(String key) {
+        return metadata.get(key);
     }
 
-    public void setId(String id) {
-        this.id = id;
+    /**
+     * Builds a TextSegment from this document.
+     *
+     * @return a TextSegment.
+     */
+    public TextSegment toTextSegment() {
+        return TextSegment.from(text, metadata.copy().put("index", "0"));
     }
 
-    public String getContent() {
-        return content;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Document that = (Document) o;
+        return Objects.equals(this.text, that.text)
+                && Objects.equals(this.metadata, that.metadata);
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    @Override
+    public int hashCode() {
+        return Objects.hash(text, metadata);
     }
 
-    public double getScore() {
-        return score;
+    @Override
+    public String toString() {
+        return "Document {" +
+                " text = " + quoted(text) +
+                " metadata = " + metadata.toMap() +
+                " }";
     }
 
-    public void setScore(double score) {
-        this.score = score;
+    /**
+     * Creates a new Document from the given text.
+     *
+     * <p>The created document will have empty metadata.</p>
+     *
+     * @param text the text of the document.
+     * @return a new Document.
+     */
+    public static Document from(String text) {
+        return new Document(text);
     }
 
-    public static Document of(String content){
-        Document document = new Document();
-        document.setContent(content);
-        return document;
+    /**
+     * Creates a new Document from the given text.
+     *
+     * @param text     the text of the document.
+     * @param metadata the metadata of the document.
+     * @return a new Document.
+     */
+    public static Document from(String text, Metadata metadata) {
+        return new Document(text, metadata);
+    }
+
+    /**
+     * Creates a new Document from the given text.
+     *
+     * <p>The created document will have empty metadata.</p>
+     *
+     * @param text the text of the document.
+     * @return a new Document.
+     */
+    public static Document document(String text) {
+        return from(text);
+    }
+
+    /**
+     * Creates a new Document from the given text.
+     *
+     * @param text     the text of the document.
+     * @param metadata the metadata of the document.
+     * @return a new Document.
+     */
+    public static Document document(String text, Metadata metadata) {
+        return from(text, metadata);
     }
 }

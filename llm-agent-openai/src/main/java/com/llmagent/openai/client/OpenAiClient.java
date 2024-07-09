@@ -59,7 +59,6 @@ public abstract class OpenAiClient {
         public String organizationId;
         public String apiVersion;
         public String openAiApiKey;
-        public String azureApiKey;
         public Duration callTimeout = Duration.ofSeconds(60);
         public Duration connectTimeout = Duration.ofSeconds(60);
         public Duration readTimeout = Duration.ofSeconds(60);
@@ -78,7 +77,6 @@ public abstract class OpenAiClient {
         /**
          * @param baseUrl Base URL of OpenAI API.
          *                For OpenAI (default): "https://api.openai.com/v1/"
-         *                For Azure OpenAI: "https://{resource-name}.openai.azure.com/openai/deployments/{deployment-id}/"
          * @return builder
          */
         public B baseUrl(String baseUrl) {
@@ -100,7 +98,7 @@ public abstract class OpenAiClient {
         }
 
         /**
-         * @param apiVersion Version of the API in the YYYY-MM-DD format. Applicable only for Azure OpenAI.
+         * @param apiVersion Version of the API in the YYYY-MM-DD format.
          * @return builder
          */
         public B apiVersion(String apiVersion) {
@@ -120,19 +118,6 @@ public abstract class OpenAiClient {
                 );
             }
             this.openAiApiKey = openAiApiKey;
-            return (B) this;
-        }
-
-        /**
-         * @param azureApiKey Azure API key.
-         *                    Will be injected in HTTP headers like this: "api-key: ${azureApiKey}"
-         * @return builder
-         */
-        public B azureApiKey(String azureApiKey) {
-            if (azureApiKey == null || azureApiKey.trim().isEmpty()) {
-                throw new IllegalArgumentException("azureApiKey cannot be null or empty");
-            }
-            this.azureApiKey = azureApiKey;
             return (B) this;
         }
 
