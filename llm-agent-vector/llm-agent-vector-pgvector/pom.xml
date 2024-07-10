@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.llmagent</groupId>
         <artifactId>llm-agent-vector</artifactId>
-        <version>1.0.0-beta.1</version>
+        <version>1.0.0-beta.2</version>
     </parent>
 
     <artifactId>llm-agent-vector-pgvector</artifactId>
@@ -49,12 +49,6 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.llmagent</groupId>
-            <artifactId>llm-agent-openai</artifactId>
-            <version>${llm-agent.version}</version>
         </dependency>
     </dependencies>
 </project>
