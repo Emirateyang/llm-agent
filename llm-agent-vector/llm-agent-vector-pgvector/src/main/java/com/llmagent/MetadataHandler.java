@@ -18,7 +18,7 @@ public interface MetadataHandler {
      * @param statement used to execute indexes creation.
      * @param table table name.
      */
-    void createMetadataIndexes(Statement statement, String table);
+    void createMetadataIndexes(Statement statement, String schema, String table);
 
     /**
      * Metadata columns name

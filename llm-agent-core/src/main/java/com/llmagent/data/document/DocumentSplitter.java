@@ -24,14 +24,14 @@ import java.util.List;
 import static java.util.stream.Collectors.toList;
 
 public interface DocumentSplitter {
-    List<TextSegment> split(Document text);
+    List<TextSegment> split(Document text, DocumentIdGenerator idGenerator);
 
-    default List<TextSegment> splitAll(List<Document> documents) {
+    default List<TextSegment> splitAll(List<Document> documents, DocumentIdGenerator idGenerator) {
         if (documents == null || documents.isEmpty()) {
             return Collections.emptyList();
         }
         return documents.stream()
-                .flatMap(document -> split(document).stream())
+                .flatMap(document -> split(document, idGenerator).stream())
                 .collect(toList());
     }
 }

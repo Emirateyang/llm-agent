@@ -29,8 +29,10 @@ public class DefaultMetadataStorageConfig implements MetadataStorageConfig {
      */
     public static MetadataStorageConfig defaultConfig() {
         return DefaultMetadataStorageConfig.builder()
-                .storageMode(MetadataStorageMode.JSON)
-                .columnDefinitions(Collections.singletonList("metadata JSON NULL"))
+                .storageMode(MetadataStorageMode.JSONB)
+                .columnDefinitions(Collections.singletonList("metadata JSONB NULL"))
+                .indexes(Collections.singletonList("metadata"))
+                .indexType(PgIndexType.GIN.name())
                 .build();
     }
 

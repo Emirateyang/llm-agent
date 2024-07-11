@@ -17,6 +17,7 @@ package com.llmagent.data.document.splitter;
 
 import com.llmagent.data.document.Document;
 import com.llmagent.data.document.DocumentSplitter;
+import com.llmagent.data.document.id.DocumentIdGenerator;
 import com.llmagent.data.segment.TextSegment;
 import com.llmagent.util.StringUtil;
 
@@ -28,9 +29,14 @@ import java.util.List;
 public class RecursiveCharacterTextSplitter implements DocumentSplitter {
 
     // "\n\n", "\n", "。", ".", " ", ""
-    private List<String> separators;
+    private List<String> separators = Arrays.asList("\n\n", "\n", "。", ".", " ", "");
     private int chunkSize = 500;
     private int chunkOverlap = 50;
+
+    public RecursiveCharacterTextSplitter(int chunkSize, int chunkOverlap) {
+        this.chunkSize = chunkSize;
+        this.chunkOverlap = chunkOverlap;
+    }
 
     public RecursiveCharacterTextSplitter(List<String> separators, int chunkSize, int chunkOverlap) {
         this.separators = separators;
@@ -39,7 +45,7 @@ public class RecursiveCharacterTextSplitter implements DocumentSplitter {
     }
 
     @Override
-    public List<TextSegment> split(Document document) {
+    public List<TextSegment> split(Document document, DocumentIdGenerator idGenerator) {
         if (document == null || StringUtil.noText(document.text())) {
             return Collections.emptyList();
         }
@@ -48,7 +54,7 @@ public class RecursiveCharacterTextSplitter implements DocumentSplitter {
 
         List<TextSegment> texts = new ArrayList<>(chunks.size());
         for (String textString : chunks) {
-            TextSegment segment = new TextSegment(textString, document.metadata());
+            TextSegment segment = new TextSegment(idGenerator.generateId(document), textString, document.metadata());
             texts.add(segment);
         }
         return texts;

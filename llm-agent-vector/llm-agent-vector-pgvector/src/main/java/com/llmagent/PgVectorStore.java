@@ -57,11 +57,13 @@ public class PgVectorStore implements EmbeddingStore<TextSegment> {
     private final boolean needCreateTable;
 
     private final MetadataHandler metadataHandler;
+    private final BizDataHandler bizDataHandler;
     private final String schema;
 
     public PgVectorStore(PgVectorConfig config, String table, PgIndexType createIndexMethod,
                          PgDistanceType distanceType,
-                         MetadataStorageConfig metadataStorageConfig) {
+                         MetadataStorageConfig metadataStorageConfig,
+                         BizDataHandler bizDataHandler) {
 
         this.datasource = createDataSource(config.getHost(), config.getPort(), config.getUsername(),
                 config.getPassword(), config.getDatabaseName());
@@ -74,12 +76,17 @@ public class PgVectorStore implements EmbeddingStore<TextSegment> {
         MetadataStorageConfig storageConfig = metadataStorageConfig != null ? metadataStorageConfig : DefaultMetadataStorageConfig.defaultConfig();
         this.metadataHandler = MetadataHandlerFactory.get(storageConfig);
 
+        this.bizDataHandler = bizDataHandler;
+
         int dimension = ensureGreaterThanZero(config.getDimension(), "config#dimension");
         int indexListSize = ensureGreaterThanZero(config.getIndexListSize(), "config#indexListSize");
 
         initTable(config.isDropTableIfExist(), indexListSize, dimension);
     }
 
+    /**
+     * Create a data source for PostgreSQL
+     */
     private DataSource createDataSource(String host, Integer port, String user, String password, String database) {
 
         host = ensureNotBlank(host, "host");
@@ -97,6 +104,9 @@ public class PgVectorStore implements EmbeddingStore<TextSegment> {
         return source;
     }
 
+    /**
+     * Initialize the table
+     */
     protected void initTable(Boolean dropTableIfExist, Integer indexListSize, Integer dimension) {
 
         String query = "init";
@@ -106,13 +116,25 @@ public class PgVectorStore implements EmbeddingStore<TextSegment> {
                 statement.executeUpdate(String.format("DROP TABLE IF EXISTS %s", tableName));
             }
             if (needCreateTable) {
-                query = String.format("CREATE TABLE IF NOT EXISTS %s (id varchar(64) PRIMARY KEY, " +
-                                "embedding vector(%s), doc_chunk TEXT NULL, %s )",
-                        tableName,
-                        dimension,
-                        metadataHandler.columnDefinitionsString());
-                statement.executeUpdate(query);
-                metadataHandler.createMetadataIndexes(statement, tableName);
+                if (bizDataHandler != null && StringUtil.hasText(bizDataHandler.columnDefinitionsString())) {
+                    query = String.format("CREATE TABLE IF NOT EXISTS %s (id varchar(64) PRIMARY KEY, " +
+                                    "embedding vector(%s), doc_chunk TEXT NULL, %s, %s )",
+                            tableName,
+                            dimension,
+                            bizDataHandler.columnDefinitionsString(),
+                            metadataHandler.columnDefinitionsString());
+                    statement.executeUpdate(query);
+                    metadataHandler.createMetadataIndexes(statement, this.schema, this.table);
+                    bizDataHandler.createBizDataIndexes(statement, this.schema, this.table);
+                } else {
+                    query = String.format("CREATE TABLE IF NOT EXISTS %s (id varchar(64) PRIMARY KEY, " +
+                                    "embedding vector(%s), doc_chunk TEXT NULL, %s )",
+                            tableName,
+                            dimension,
+                            metadataHandler.columnDefinitionsString());
+                    statement.executeUpdate(query);
+                    metadataHandler.createMetadataIndexes(statement, this.schema, this.table);
+                }
             }
             if (createIndexMethod != PgIndexType.NONE) {
                 final String indexName = this.table + "_" + createIndexMethod.name() + "_index";
@@ -206,16 +228,34 @@ public class PgVectorStore implements EmbeddingStore<TextSegment> {
         int maxResults = request.maxResults();
         double minScore = request.minScore();
         Filter filter = request.filter();
+        Filter bizDataFilter = request.filter4BizData();
 
         List<EmbeddingMatch<TextSegment>> result = new ArrayList<>();
         try (Connection connection = getConnection()) {
             String referenceVector = Arrays.toString(referenceEmbedding.vector());
             String whereClause = (filter == null) ? "" : metadataHandler.whereClause(filter);
             whereClause = (whereClause.isEmpty()) ? "" : "WHERE " + whereClause;
-            String query = String.format(
-                    "WITH temp AS (SELECT (2 - (embedding <=> '%s')) / 2 AS score, id, embedding, doc_chunk, " +
-                            "%s FROM %s %s) SELECT * FROM temp WHERE score >= %s ORDER BY score desc LIMIT %s;",
-                    referenceVector, join(",", metadataHandler.columnsNames()), tableName, whereClause, minScore, maxResults);
+
+            boolean hasBizData = false;
+            if (bizDataHandler != null && StringUtil.hasText(bizDataHandler.columnDefinitionsString())) {
+                hasBizData = true;
+            }
+
+            String query;
+            if (hasBizData) {
+                String bizDataClause = bizDataHandler.whereClause(bizDataFilter);
+                whereClause = (whereClause.isEmpty()) ? " WHERE " + bizDataClause : " AND " + bizDataClause;
+                query = String.format(
+                        "WITH temp AS (SELECT (1-(embedding <=> '%s')) AS score, id, embedding, doc_chunk, " +
+                                "%s, %s FROM %s %s) SELECT * FROM temp WHERE score >= %s ORDER BY score desc LIMIT %s;",
+                        referenceVector, join(",", bizDataHandler.columnsNames()),
+                        join(",", metadataHandler.columnsNames()), tableName, whereClause, minScore, maxResults);
+            } else {
+                query = String.format(
+                        "WITH temp AS (SELECT (1-(embedding <=> '%s')) AS score, id, embedding, doc_chunk, " +
+                                "%s FROM %s %s) SELECT * FROM temp WHERE score >= %s ORDER BY score desc LIMIT %s;",
+                        referenceVector, join(",", metadataHandler.columnsNames()), tableName, whereClause, minScore, maxResults);
+            }
             try (PreparedStatement selectStmt = connection.prepareStatement(query)) {
                 try (ResultSet resultSet = selectStmt.executeQuery()) {
                     while (resultSet.next()) {
@@ -229,7 +269,12 @@ public class PgVectorStore implements EmbeddingStore<TextSegment> {
                         TextSegment textSegment = null;
                         if (isNotNullOrBlank(docChunk)) {
                             Metadata metadata = metadataHandler.fromResultSet(resultSet);
-                            textSegment = TextSegment.from(docChunk, metadata);
+                            if (hasBizData) {
+                                Metadata bizData = bizDataHandler.fromResultSet(resultSet);
+                                textSegment = TextSegment.from(docChunk, metadata, bizData);
+                            } else {
+                                textSegment = TextSegment.from(docChunk, metadata);
+                            }
                         }
                         result.add(new EmbeddingMatch<>(score, embeddingId, embedding, textSegment));
                     }
@@ -260,16 +305,40 @@ public class PgVectorStore implements EmbeddingStore<TextSegment> {
 
         String tableName = this.schema + "." + this.table;
 
+        boolean hasBizData = false;
+        if (bizDataHandler != null && StringUtil.hasText(bizDataHandler.columnDefinitionsString())) {
+            hasBizData = true;
+        }
+
         try (Connection connection = getConnection()) {
-            String query = String.format(
-                    "INSERT INTO %s (id, embedding, doc_chunk, %s) VALUES (?, ?, ?, %s)" +
-                            "ON CONFLICT (id) DO UPDATE SET " +
-                            "embedding = EXCLUDED.embedding," +
-                            "doc_chunk = EXCLUDED.doc_chunk," +
-                            "%s;",
-                    tableName, join(",", metadataHandler.columnsNames()),
-                    join(",", nCopies(metadataHandler.columnsNames().size(), "?")),
-                    metadataHandler.insertClause());
+            String query;
+            if (hasBizData) {
+                query = String.format(
+                        "INSERT INTO %s (id, embedding, doc_chunk, %s, %s) VALUES (?, ?, ?, %s, %s)" +
+                                "ON CONFLICT (id) DO UPDATE SET " +
+                                "embedding = EXCLUDED.embedding," +
+                                "doc_chunk = EXCLUDED.doc_chunk," +
+                                "%s," +
+                                "%s;",
+                        tableName,
+                        join(",", bizDataHandler.columnsNames()),
+                        join(",", metadataHandler.columnsNames()),
+                        join(",", nCopies(bizDataHandler.columnsNames().size(), "?")),
+                        join(",", nCopies(metadataHandler.columnsNames().size(), "?")),
+                        bizDataHandler.insertClause(),
+                        metadataHandler.insertClause());
+            } else {
+                query = String.format(
+                        "INSERT INTO %s (id, embedding, doc_chunk, %s) VALUES (?, ?, ?, %s)" +
+                                "ON CONFLICT (id) DO UPDATE SET " +
+                                "embedding = EXCLUDED.embedding," +
+                                "doc_chunk = EXCLUDED.doc_chunk," +
+                                "%s;",
+                        tableName, join(",", metadataHandler.columnsNames()),
+                        join(",", nCopies(metadataHandler.columnsNames().size(), "?")),
+                        metadataHandler.insertClause());
+            }
+
             try (PreparedStatement upsertStmt = connection.prepareStatement(query)) {
                 for (int i = 0; i < ids.size(); ++i) {
                     upsertStmt.setObject(1, ids.get(i));
@@ -277,17 +346,43 @@ public class PgVectorStore implements EmbeddingStore<TextSegment> {
 
                     if (embedded != null && embedded.get(i) != null) {
                         upsertStmt.setObject(3, embedded.get(i).text());
-                        metadataHandler.setMetadata(upsertStmt, 4, embedded.get(i).metadata());
+                        if (hasBizData) {
+                            bizDataHandler.setBizData(upsertStmt, 4, embedded.get(i).bizData());
+                            metadataHandler.setMetadata(upsertStmt, 5, embedded.get(i).metadata());
+                        } else {
+                            metadataHandler.setMetadata(upsertStmt, 4, embedded.get(i).metadata());
+                        }
                     } else {
                         upsertStmt.setNull(3, Types.VARCHAR);
-                        IntStream.range(4, 4 + metadataHandler.columnsNames().size()).forEach(
-                                j -> {
-                                    try {
-                                        upsertStmt.setNull(j, Types.OTHER);
-                                    } catch (SQLException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                });
+                        if (hasBizData) {
+                            IntStream.range(4, 4 + bizDataHandler.columnsNames().size()).forEach(
+                                    j -> {
+                                        try {
+                                            upsertStmt.setNull(j, Types.OTHER);
+                                        } catch (SQLException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    });
+                            IntStream.range(5 + bizDataHandler.columnsNames().size(),
+                                    5 + bizDataHandler.columnsNames().size() + metadataHandler.columnsNames().size()).forEach(
+                                    j -> {
+                                        try {
+                                            upsertStmt.setNull(j, Types.OTHER);
+                                        } catch (SQLException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    });
+                        } else {
+                            IntStream.range(4, 4 + metadataHandler.columnsNames().size()).forEach(
+                                    j -> {
+                                        try {
+                                            upsertStmt.setNull(j, Types.OTHER);
+                                        } catch (SQLException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    });
+                        }
+
                     }
                     upsertStmt.addBatch();
                 }
@@ -323,6 +418,8 @@ public class PgVectorStore implements EmbeddingStore<TextSegment> {
         private PgDistanceType distanceType = PgDistanceType.COSINE_DISTANCE;
         private MetadataStorageConfig metadataStorageConfig = DefaultMetadataStorageConfig.defaultConfig();
 
+        private BizDataHandler bizDataHandler;
+
         public Builder config(PgVectorConfig config) {
             this.config = config;
             return this;
@@ -343,8 +440,14 @@ public class PgVectorStore implements EmbeddingStore<TextSegment> {
             this.metadataStorageConfig = metadataStorageConfig;
             return this;
         }
+
+        public Builder bizDataHandler(BizDataHandler bizDataHandler) {
+            this.bizDataHandler = bizDataHandler;
+            return this;
+        }
+
         public PgVectorStore build() {
-            return new PgVectorStore(config, table, indexType, distanceType, metadataStorageConfig);
+            return new PgVectorStore(config, table, indexType, distanceType, metadataStorageConfig, bizDataHandler);
         }
     }
 }

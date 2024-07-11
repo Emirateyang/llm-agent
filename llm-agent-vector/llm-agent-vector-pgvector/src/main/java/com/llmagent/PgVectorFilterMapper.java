@@ -14,6 +14,10 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
+/**
+ * The JSONB default use GIN index, ->> operator can not use index
+ * So add a new filter to support operator like @> so that we can use index
+ */
 public abstract class PgVectorFilterMapper {
     static final Map<Class<?>, String> SQL_TYPE_MAP = Stream.of(
                     new AbstractMap.SimpleEntry<>(Integer.class, "int"),
@@ -49,6 +53,8 @@ public abstract class PgVectorFilterMapper {
             return mapNot((Not) filter);
         } else if (filter instanceof Or) {
             return mapOr((Or) filter);
+        } else if (filter instanceof GINOperator) {
+            return mapGINOperator((GINOperator) filter);
         } else {
             throw new UnsupportedOperationException("Unsupported filter type: " + filter.getClass().getName());
         }
@@ -122,5 +128,9 @@ public abstract class PgVectorFilterMapper {
     String formatValuesAsString(Collection<?> values) {
         return "(" + values.stream().map(v -> format("'%s'", v))
                 .collect(Collectors.joining(",")) + ")";
+    }
+
+    private String mapGINOperator(GINOperator operator) {
+        return format("%s %s", operator.key(), operator.comparisonExpression());
     }
 }

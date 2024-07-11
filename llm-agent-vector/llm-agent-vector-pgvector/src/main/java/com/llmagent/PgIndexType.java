@@ -18,5 +18,9 @@ public enum PgIndexType {
      * speed-recall tradeoff). There’s no training step like IVFFlat, so the index can
      * be created without any data in the table.
      */
-    HNSW;
+    HNSW,
+
+    GIN,
+
+    BTREE;
 }

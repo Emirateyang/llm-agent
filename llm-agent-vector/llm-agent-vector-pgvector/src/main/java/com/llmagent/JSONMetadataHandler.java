@@ -17,7 +17,6 @@ public class JSONMetadataHandler implements MetadataHandler {
     final JSONFilterMapper filterMapper;
     final List<String> indexes;
 
-
     public JSONMetadataHandler(MetadataStorageConfig config) {
         List<String> definition = ValidationUtil.ensureNotEmpty(config.columnDefinitions(), "Metadata definition");
         if (definition.size() > 1) {
@@ -41,7 +40,7 @@ public class JSONMetadataHandler implements MetadataHandler {
     }
 
     @Override
-    public void createMetadataIndexes(Statement statement, String table) {
+    public void createMetadataIndexes(Statement statement, String schema, String table) {
         if (!this.indexes.isEmpty()) {
             throw new RuntimeException("Indexes are not allowed for JSON metadata, use JSONB instead");
         }

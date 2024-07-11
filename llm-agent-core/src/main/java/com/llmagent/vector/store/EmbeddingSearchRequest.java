@@ -15,6 +15,8 @@ public class EmbeddingSearchRequest {
     private final double minScore;
     private final Filter filter;
 
+    private Filter filter4BizData;
+
     /**
      * Creates an instance of an EmbeddingSearchRequest.
      *
@@ -29,13 +31,23 @@ public class EmbeddingSearchRequest {
      *                       matches the {@link Filter} will be returned.
      *                       Please note that not all {@link EmbeddingStore}s support this feature yet.
      *                       This is an optional parameter. Default: no filtering
+     * @param filter4BizData The filter to be applied to the {@link Metadata} of the business data during search.
      */
+//    @Builder
+//    public EmbeddingSearchRequest(VectorData queryEmbedding, Integer maxResults, Double minScore, Filter filter) {
+//        this.queryEmbedding = queryEmbedding;
+//        this.maxResults = getOrDefault(maxResults, 3);
+//        this.minScore = getOrDefault(minScore, 0.0);
+//        this.filter = filter;
+//    }
+
     @Builder
-    public EmbeddingSearchRequest(VectorData queryEmbedding, Integer maxResults, Double minScore, Filter filter) {
+    public EmbeddingSearchRequest(VectorData queryEmbedding, Integer maxResults, Double minScore, Filter filter, Filter filter4BizData) {
         this.queryEmbedding = queryEmbedding;
         this.maxResults = getOrDefault(maxResults, 3);
         this.minScore = getOrDefault(minScore, 0.0);
         this.filter = filter;
+        this.filter4BizData = filter4BizData;
     }
 
     public VectorData queryEmbedding() {
@@ -52,5 +64,9 @@ public class EmbeddingSearchRequest {
 
     public Filter filter() {
         return filter;
+    }
+
+    public Filter filter4BizData() {
+        return filter4BizData;
     }
 }

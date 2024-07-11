@@ -8,8 +8,12 @@ import static com.llmagent.util.StringUtil.quoted;
 
 public class TextSegment {
 
+    // segment id
+    private String sid;
     private final String text;
     private final Metadata metadata;
+
+    private Metadata bizData;
 
     /**
      * Creates a new text segment.
@@ -17,9 +21,27 @@ public class TextSegment {
      * @param text     the text.
      * @param metadata the metadata.
      */
-    public TextSegment(String text, Metadata metadata) {
+    public TextSegment(String text, Metadata metadata, Metadata bizData) {
         this.text = text;
         this.metadata = metadata;
+        this.bizData = bizData;
+    }
+
+    public TextSegment(String sid, String text, Metadata metadata) {
+        this.sid = sid;
+        this.text = text;
+        this.metadata = metadata;
+    }
+
+    public TextSegment(String sid, String text, Metadata metadata, Metadata bizData) {
+        this.sid = sid;
+        this.text = text;
+        this.metadata = metadata;
+        this.bizData = bizData;
+    }
+
+    public String sid() {
+        return sid;
     }
 
     /**
@@ -54,6 +76,14 @@ public class TextSegment {
         return metadata.get(key);
     }
 
+    public Metadata bizData() {
+        return bizData;
+    }
+
+    public String bizData(String key) {
+        return bizData.get(key);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -83,7 +113,11 @@ public class TextSegment {
      * @return the text segment.
      */
     public static TextSegment from(String text) {
-        return new TextSegment(text, new Metadata());
+        return new TextSegment(text, new Metadata(), new Metadata());
+    }
+
+    public static TextSegment from(String sid, String text) {
+        return new TextSegment(sid, text, new Metadata(), new Metadata());
     }
 
     /**
@@ -94,27 +128,11 @@ public class TextSegment {
      * @return the text segment.
      */
     public static TextSegment from(String text, Metadata metadata) {
-        return new TextSegment(text, metadata);
+        return new TextSegment(text, metadata, new Metadata());
     }
 
-    /**
-     * Creates a new text segment.
-     *
-     * @param text the text.
-     * @return the text segment.
-     */
-    public static TextSegment textSegment(String text) {
-        return from(text);
+    public static TextSegment from(String text, Metadata metadata, Metadata bizData) {
+        return new TextSegment(text, metadata, bizData);
     }
 
-    /**
-     * Creates a new text segment.
-     *
-     * @param text     the text.
-     * @param metadata the metadata.
-     * @return the text segment.
-     */
-    public static TextSegment textSegment(String text, Metadata metadata) {
-        return from(text, metadata);
-    }
 }

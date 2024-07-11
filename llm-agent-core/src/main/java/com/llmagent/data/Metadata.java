@@ -60,7 +60,7 @@ public class Metadata implements Serializable {
      *
      * @param key the key
      * @return the value associated with the given key, or {@code null} if the key is not present.
-     * @deprecated as of 0.31.0, use {@link #getString(String)}, {@link #getInteger(String)}, {@link #getLong(String)},
+     * @deprecated use {@link #getString(String)}, {@link #getInteger(String)}, {@link #getLong(String)},
      * {@link #getFloat(String)}, {@link #getDouble(String)} instead.
      */
     @Deprecated
