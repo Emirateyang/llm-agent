@@ -246,15 +246,15 @@ public class PgVectorStore implements EmbeddingStore<TextSegment> {
                 String bizDataClause = bizDataHandler.whereClause(bizDataFilter);
                 whereClause = (whereClause.isEmpty()) ? " WHERE " + bizDataClause : " AND " + bizDataClause;
                 query = String.format(
-                        "WITH temp AS (SELECT (1-(embedding <=> '%s')) AS score, id, embedding, doc_chunk, " +
-                                "%s, %s FROM %s %s) SELECT * FROM temp WHERE score >= %s ORDER BY score desc LIMIT %s;",
+                        "WITH temp AS (SELECT (embedding <=> '%s') AS score, id, embedding, doc_chunk, " +
+                                "%s, %s FROM %s %s) SELECT * FROM temp ORDER BY score asc LIMIT %s;",
                         referenceVector, join(",", bizDataHandler.columnsNames()),
-                        join(",", metadataHandler.columnsNames()), tableName, whereClause, minScore, maxResults);
+                        join(",", metadataHandler.columnsNames()), tableName, whereClause, maxResults);
             } else {
                 query = String.format(
-                        "WITH temp AS (SELECT (1-(embedding <=> '%s')) AS score, id, embedding, doc_chunk, " +
-                                "%s FROM %s %s) SELECT * FROM temp WHERE score >= %s ORDER BY score desc LIMIT %s;",
-                        referenceVector, join(",", metadataHandler.columnsNames()), tableName, whereClause, minScore, maxResults);
+                        "WITH temp AS (SELECT (embedding <=> '%s') AS score, id, embedding, doc_chunk, " +
+                                "%s FROM %s %s) SELECT * FROM temp ORDER BY score asc LIMIT %s;",
+                        referenceVector, join(",", metadataHandler.columnsNames()), tableName, whereClause, maxResults);
             }
             try (PreparedStatement selectStmt = connection.prepareStatement(query)) {
                 try (ResultSet resultSet = selectStmt.executeQuery()) {
