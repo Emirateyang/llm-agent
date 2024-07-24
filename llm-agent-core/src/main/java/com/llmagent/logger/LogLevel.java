@@ -1,4 +1,4 @@
-package com.llmagent.openai;
+package com.llmagent.logger;
 
 public enum LogLevel {
 

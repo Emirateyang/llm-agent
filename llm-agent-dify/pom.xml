@@ -9,7 +9,7 @@
         <version>1.0.0-beta.3</version>
     </parent>
 
-    <artifactId>llm-agent-openai</artifactId>
+    <artifactId>llm-agent-dify</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -64,6 +64,12 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>${gson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.parquet</groupId>
+            <artifactId>parquet-jackson</artifactId>
+            <version>1.13.1</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

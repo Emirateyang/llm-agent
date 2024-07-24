@@ -1,4 +1,4 @@
-package com.llmagent.openai.client;
+package com.llmagent.dify.client;
 
 import com.llmagent.logger.LogLevel;
 import okhttp3.Interceptor;

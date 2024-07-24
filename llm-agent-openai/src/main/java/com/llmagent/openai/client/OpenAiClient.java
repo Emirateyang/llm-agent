@@ -1,5 +1,6 @@
 package com.llmagent.openai.client;
 
+import com.llmagent.logger.LogLevel;
 import com.llmagent.openai.*;
 import com.llmagent.openai.chat.ChatCompletionRequest;
 import com.llmagent.openai.chat.ChatCompletionResponse;
