@@ -3,7 +3,6 @@ package com.llmagent.dify.client;
 import com.llmagent.dify.DifyClientBuilderFactory;
 import com.llmagent.dify.SyncOrAsync;
 import com.llmagent.dify.SyncOrAsyncOrStreaming;
-import com.llmagent.SyncOrAsync;
 import com.llmagent.dify.chat.DifyChatCompletionResponse;
 import com.llmagent.dify.chat.DifyMessageRequest;
 import com.llmagent.dify.chat.DifyStreamingChatCompletionResponse;

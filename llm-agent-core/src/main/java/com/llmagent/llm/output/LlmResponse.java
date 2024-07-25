@@ -1,5 +1,6 @@
 package com.llmagent.llm.output;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -14,6 +15,8 @@ public class LlmResponse<T> {
     private final TokenUsage tokenUsage;
     private final FinishReason finishReason;
 
+    private final List<RetrieverResources> retrieverResources;
+
     /**
      * Create a new Response.
      *
@@ -22,7 +25,7 @@ public class LlmResponse<T> {
      * @param content the content to wrap.
      */
     public LlmResponse(T content) {
-        this(content, null, null);
+        this(content, null, null,null);
     }
 
     /**
@@ -32,10 +35,11 @@ public class LlmResponse<T> {
      * @param tokenUsage the token usage statistics, or {@code null}.
      * @param finishReason the finish reason, or {@code null}.
      */
-    public LlmResponse(T content, TokenUsage tokenUsage, FinishReason finishReason) {
+    public LlmResponse(T content, TokenUsage tokenUsage, FinishReason finishReason, List<RetrieverResources> retrieverResources) {
         this.content = content;
         this.tokenUsage = tokenUsage;
         this.finishReason = finishReason;
+        this.retrieverResources = retrieverResources;
     }
 
     /**
@@ -60,6 +64,10 @@ public class LlmResponse<T> {
      */
     public FinishReason finishReason() {
         return finishReason;
+    }
+
+    public List<RetrieverResources> retrieverResources() {
+        return retrieverResources;
     }
 
     @Override
@@ -104,7 +112,7 @@ public class LlmResponse<T> {
      * @param <T> the type of content.
      */
     public static <T> LlmResponse<T> from(T content, TokenUsage tokenUsage) {
-        return new LlmResponse<>(content, tokenUsage, null);
+        return new LlmResponse<>(content, tokenUsage, null, null);
     }
 
     /**
@@ -116,6 +124,10 @@ public class LlmResponse<T> {
      * @param <T> the type of content.
      */
     public static <T> LlmResponse<T> from(T content, TokenUsage tokenUsage, FinishReason finishReason) {
-        return new LlmResponse<>(content, tokenUsage, finishReason);
+        return new LlmResponse<>(content, tokenUsage, finishReason, null);
+    }
+
+    public static <T> LlmResponse<T> from(T content, TokenUsage tokenUsage, List<RetrieverResources> retrieverResources) {
+        return new LlmResponse<>(content, tokenUsage, null, retrieverResources);
     }
 }

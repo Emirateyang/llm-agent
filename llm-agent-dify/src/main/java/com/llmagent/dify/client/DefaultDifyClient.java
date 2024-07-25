@@ -22,17 +22,11 @@ import static com.llmagent.dify.json.Json.GSON;
 public class DefaultDifyClient extends DifyClient {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultDifyClient.class);
-//
     private final String baseUrl;
-//    private final String apiVersion;
     private final OkHttpClient okHttpClient;
     private final DifyApi difyApi;
     private final boolean logStreamingResponses;
-//
-//    public DefaultDifyClient(String apiKey) {
-//        this(new Builder().openAiApiKey(apiKey));
-//    }
-//
+
     private DefaultDifyClient(Builder serviceBuilder) {
         this.baseUrl = serviceBuilder.baseUrl;
 

@@ -3,6 +3,7 @@ package com.llmagent.dify.chat;
 import com.llmagent.dify.client.DifyClient;
 import com.llmagent.data.message.AiMessage;
 import com.llmagent.data.message.ChatMessage;
+import com.llmagent.dify.exception.DifyHttpException;
 import com.llmagent.llm.chat.ChatLanguageModel;
 import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.util.ObjectUtil;
@@ -12,6 +13,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
+import static com.llmagent.dify.DifyHelper.*;
 import static com.llmagent.util.RetryUtil.withRetry;
 
 public class DifyChatModel implements ChatLanguageModel {
@@ -42,6 +44,8 @@ public class DifyChatModel implements ChatLanguageModel {
                            Boolean logResponses) {
 
         timeout = ObjectUtil.getOrDefault(timeout, Duration.ofSeconds(60));
+        inputs = ObjectUtil.getOrDefault(inputs, Map.of());
+        responseMode = ObjectUtil.getOrDefault(responseMode, ResponseMode.BLOCKING.toString());
 
         this.client = DifyClient.builder()
                 .apiKey(apiKey)
@@ -73,6 +77,7 @@ public class DifyChatModel implements ChatLanguageModel {
 
         DifyMessageRequest.Builder requestBuilder = DifyMessageRequest.builder()
                 .inputs(inputs)
+                .query(toDifyMessage(messages))
                 .responseMode(responseMode)
                 .conversationId(conversationId)
                 .user(user);
@@ -83,22 +88,15 @@ public class DifyChatModel implements ChatLanguageModel {
         DifyMessageRequest request = requestBuilder.build();
 
         try {
-            if (ResponseMode.STREAMING.toString().equalsIgnoreCase(responseMode)) {
-                DifyStreamingChatCompletionResponse response = withRetry(() -> client.streamingChatCompletion(request).execute(), maxRetries);
+            DifyChatCompletionResponse chatCompletionResponse = withRetry(() -> client.chatCompletion(request).execute(), maxRetries);
 
-//                LlmResponse<AiMessage> response = LlmResponse.from (
-//                        aiMessageFrom(chatCompletionResponse),
-//                        tokenUsageFrom(chatCompletionResponse.usage()),
-//                        finishReasonFrom(chatCompletionResponse.choices().get(0).finishReason())
-            } else {
-//                DifyChatCompletionResponse response = withRetry(() -> client.chatCompletion(request).execute(), maxRetries);
-            }
-
-
+            return LlmResponse.from(
+                aiMessageFrom(chatCompletionResponse),
+                tokenUsageFrom(chatCompletionResponse.getMetadata().getUsage()),
+                retrieverResourceFrom(chatCompletionResponse.getMetadata().getRetrieverResources())
+            );
         } catch (RuntimeException ex) {
-
+            throw ex;
         }
-
-        return null;
-        }
+    }
 }

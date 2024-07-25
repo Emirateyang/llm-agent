@@ -20,6 +20,7 @@ public class DifyMessageRequest {
     private List<DifyFileContent> files;
     // 默认 true。 若设置为 false，则可通过调用会话重命名接口并设置 auto_generate 为 true 实现异步生成标题
     private boolean autoGenerateName = true;
+    private String query;
 
     private DifyMessageRequest(Builder builder) {
         this.inputs = builder.inputs;
@@ -28,6 +29,7 @@ public class DifyMessageRequest {
         this.files = builder.files;
         this.autoGenerateName = builder.autoGenerateName;
         this.user = builder.user;
+        this.query = builder.query;
     }
 
     public static Builder builder() {
@@ -44,6 +46,8 @@ public class DifyMessageRequest {
         // 默认 true。 若设置为 false，则可通过调用会话重命名接口并设置 auto_generate 为 true 实现异步生成标题
         private boolean autoGenerateName = true;
 
+        private String query;
+
         private Builder() {
         }
 
@@ -54,6 +58,7 @@ public class DifyMessageRequest {
             autoGenerateName(instance.autoGenerateName);
             user(instance.user);
             files(instance.files);
+            query(instance.query);
             return this;
         }
 
@@ -88,6 +93,10 @@ public class DifyMessageRequest {
             return this;
         }
 
+        public Builder query(String query) {
+            this.query = query;
+            return this;
+        }
 
         public DifyMessageRequest build() {
             return new DifyMessageRequest(this);

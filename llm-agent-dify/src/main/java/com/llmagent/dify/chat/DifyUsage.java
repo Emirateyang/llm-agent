@@ -1,5 +1,8 @@
 package com.llmagent.dify.chat;
 
+import lombok.Data;
+
+@Data
 public class DifyUsage {
 
     private Integer promptTokens;

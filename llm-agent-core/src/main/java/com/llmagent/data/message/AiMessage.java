@@ -17,6 +17,9 @@ public class AiMessage implements ChatMessage {
     private final String content;
     private final List<ToolRequest> toolRequests;
 
+    // dify return conversation id
+    private String conversationId;
+
     /**
      * Create a new {@link AiMessage} with the given text.
      *
@@ -164,5 +167,13 @@ public class AiMessage implements ChatMessage {
      */
     public static AiMessage aiMessage(List<ToolRequest> toolExecutionRequests) {
         return from(toolExecutionRequests);
+    }
+
+    public String getConversationId() {
+        return conversationId;
+    }
+
+    public void setConversationId(String conversationId) {
+        this.conversationId = conversationId;
     }
 }
