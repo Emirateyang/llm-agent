@@ -143,7 +143,7 @@ public class DefaultDifyClient extends DifyClient {
                 difyApi.chatCompletion(syncRequest),
                 r -> r,
                 okHttpClient,
-                formatUrl("chat/completions"),
+                formatUrl("chat-messages"),
                 () -> DifyMessageRequest.builder().from(request).build(),
                 DifyChatCompletionResponse.class,
                 r -> r,

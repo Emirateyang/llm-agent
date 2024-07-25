@@ -80,6 +80,7 @@ public class DifyChatModel implements ChatLanguageModel {
                 .query(toDifyMessage(messages))
                 .responseMode(responseMode)
                 .conversationId(conversationId)
+                .autoGenerateName(autoGenerateName)
                 .user(user);
         if (this.files != null) {
             requestBuilder.files(files);
