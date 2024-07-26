@@ -7,7 +7,6 @@ public interface StreamingResponseHandler<T> {
 
     /**
      * Invoked each time the language model generates a new token in a textual response.
-     * If the model executes a tool instead, this method will not be invoked; {@link #onComplete} will be invoked instead.
      *
      * @param token The newly generated token, which is a part of the complete response.
      */

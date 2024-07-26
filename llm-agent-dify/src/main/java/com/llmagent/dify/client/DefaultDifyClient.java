@@ -27,6 +27,8 @@ public class DefaultDifyClient extends DifyClient {
     private final DifyApi difyApi;
     private final boolean logStreamingResponses;
 
+    private final boolean breakOnToolCalled;
+
     private DefaultDifyClient(Builder serviceBuilder) {
         this.baseUrl = serviceBuilder.baseUrl;
 
@@ -58,6 +60,8 @@ public class DefaultDifyClient extends DifyClient {
         // might change to fastjson in the future
         retrofitBuilder.addConverterFactory(GsonConverterFactory.create(GSON));
         this.difyApi = retrofitBuilder.build().create(DifyApi.class);
+
+        this.breakOnToolCalled = serviceBuilder.breakOnToolCalled;
     }
 
     public void shutdown() {
@@ -131,7 +135,8 @@ public class DefaultDifyClient extends DifyClient {
                 () -> DifyMessageRequest.builder().from(request).build(),
                 DifyStreamingChatCompletionResponse.class,
                 r -> r,
-                logStreamingResponses
+                logStreamingResponses,
+                breakOnToolCalled
         );
     }
 

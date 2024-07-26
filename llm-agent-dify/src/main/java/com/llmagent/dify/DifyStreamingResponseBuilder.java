@@ -103,15 +103,19 @@ public class DifyStreamingResponseBuilder {
             aiMessage.setConversationId(conversationId);
             return LlmResponse.from(aiMessage,
                     tokenUsageFrom(usage),
-                    retrieverResourceFrom(retrieverResources)
-            );
+                    retrieverResourceFrom(retrieverResources));
         } else if (StringUtil.hasText(content) && toolRequests != null) {
             AiMessage aiMessage = AiMessage.from(content, toolRequests);
             aiMessage.setConversationId(conversationId);
             return LlmResponse.from(aiMessage,
                     tokenUsageFrom(usage),
-                    retrieverResourceFrom(retrieverResources)
-            );
+                    retrieverResourceFrom(retrieverResources));
+        } else if (StringUtil.noText(content) && toolRequests != null) {
+            AiMessage aiMessage = AiMessage.from(toolRequests);
+            aiMessage.setConversationId(conversationId);
+            return LlmResponse.from(aiMessage,
+                    tokenUsageFrom(usage),
+                    retrieverResourceFrom(retrieverResources));
         }
 
         return null;

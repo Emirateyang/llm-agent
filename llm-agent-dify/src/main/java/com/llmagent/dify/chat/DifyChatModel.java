@@ -37,7 +37,6 @@ public class DifyChatModel implements ChatLanguageModel {
                            Map<String, Object> inputs,
                            boolean autoGenerateName,
                            List<DifyFileContent> files,
-                           String responseMode,
                            Duration timeout,
                            Integer maxRetries,
                            Boolean logRequests,
@@ -45,7 +44,7 @@ public class DifyChatModel implements ChatLanguageModel {
 
         timeout = ObjectUtil.getOrDefault(timeout, Duration.ofSeconds(60));
         inputs = ObjectUtil.getOrDefault(inputs, Map.of());
-        responseMode = ObjectUtil.getOrDefault(responseMode, ResponseMode.BLOCKING.toString());
+        String responseMode = ResponseMode.BLOCKING.toString();
 
         this.client = DifyClient.builder()
                 .apiKey(apiKey)

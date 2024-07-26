@@ -18,6 +18,8 @@ public class RequestExecutor<Req, Resp, RespContent> implements SyncOrAsyncOrStr
     private final Function<Resp, RespContent> streamEventContentExtractor;
     private final boolean logStreamingResponses;
 
+    private final boolean breakOnToolCalled;
+
     public RequestExecutor(Call<Resp> call,
                            Function<Resp, RespContent> responseContentExtractor,
                            OkHttpClient okHttpClient,
@@ -35,6 +37,7 @@ public class RequestExecutor<Req, Resp, RespContent> implements SyncOrAsyncOrStr
         this.responseClass = responseClass;
         this.streamEventContentExtractor = streamEventContentExtractor;
         this.logStreamingResponses = logStreamingResponses;
+        this.breakOnToolCalled = false;
     }
 
     public RequestExecutor(Call<Resp> call, Function<Resp, RespContent> responseContentExtractor) {
@@ -47,6 +50,28 @@ public class RequestExecutor<Req, Resp, RespContent> implements SyncOrAsyncOrStr
         this.responseClass = null;
         this.streamEventContentExtractor = null;
         this.logStreamingResponses = false;
+        this.breakOnToolCalled = false;
+    }
+
+    public RequestExecutor(Call<Resp> call,
+                           Function<Resp, RespContent> responseContentExtractor,
+                           OkHttpClient okHttpClient,
+                           String endpointUrl,
+                           Supplier<Req> requestWithStreamSupplier,
+                           Class<Resp> responseClass,
+                           Function<Resp, RespContent> streamEventContentExtractor,
+                           boolean logStreamingResponses,
+                           boolean breakOnToolCalled) {
+        this.call = call;
+        this.responseContentExtractor = responseContentExtractor;
+
+        this.okHttpClient = okHttpClient;
+        this.endpointUrl = endpointUrl;
+        this.requestWithStreamSupplier = requestWithStreamSupplier;
+        this.responseClass = responseClass;
+        this.streamEventContentExtractor = streamEventContentExtractor;
+        this.logStreamingResponses = logStreamingResponses;
+        this.breakOnToolCalled = breakOnToolCalled;
     }
 
     @Override
@@ -68,7 +93,8 @@ public class RequestExecutor<Req, Resp, RespContent> implements SyncOrAsyncOrStr
                 requestWithStreamSupplier,
                 responseClass,
                 streamEventContentExtractor,
-                logStreamingResponses
+                logStreamingResponses,
+                breakOnToolCalled
         ).onPartialResponse(partialResponseHandler);
     }
 }

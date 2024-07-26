@@ -38,6 +38,8 @@ public abstract class DifyClient {
         public boolean logStreamingResponses;
         public LogLevel logLevel = LogLevel.DEBUG;
 
+        public boolean breakOnToolCalled;
+
         public abstract T build();
 
         /**
@@ -140,6 +142,18 @@ public abstract class DifyClient {
                 logStreamingResponses = false;
             }
             this.logStreamingResponses = logStreamingResponses;
+            return (B) this;
+        }
+
+        public B breakOnToolCalled() {
+            return breakOnToolCalled(false);
+        }
+
+        public B breakOnToolCalled(Boolean breakOnToolCalled) {
+            if (breakOnToolCalled == null) {
+                breakOnToolCalled = false;
+            }
+            this.breakOnToolCalled = breakOnToolCalled;
             return (B) this;
         }
     }

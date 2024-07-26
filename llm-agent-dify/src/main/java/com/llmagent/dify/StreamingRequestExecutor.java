@@ -1,8 +1,10 @@
 package com.llmagent.dify;
 
+import com.llmagent.dify.chat.DifyStreamingChatCompletionResponse;
 import com.llmagent.dify.client.ResponseLoggingInterceptor;
 import com.llmagent.dify.exception.ExceptionUtil;
 import com.llmagent.dify.json.Json;
+import com.llmagent.util.StringUtil;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
@@ -27,17 +29,21 @@ public class StreamingRequestExecutor<Req, Resp, RespContent> {
     private final Class<Resp> responseClass;
     private final Function<Resp, RespContent> streamEventContentExtractor;
     private final boolean logStreamingResponses;
+    private final boolean breakOnToolCalled;
     private final ResponseLoggingInterceptor responseLogger = new ResponseLoggingInterceptor();
 
     StreamingRequestExecutor(OkHttpClient okHttpClient, String endpointUrl,
                              Supplier<Req> requestWithStreamSupplier, Class<Resp> responseClass,
-                             Function<Resp, RespContent> streamEventContentExtractor, boolean logStreamingResponses) {
+                             Function<Resp, RespContent> streamEventContentExtractor,
+                             boolean logStreamingResponses,
+                             boolean breakOnToolCalled) {
         this.okHttpClient = okHttpClient;
         this.endpointUrl = endpointUrl;
         this.requestWithStreamSupplier = requestWithStreamSupplier;
         this.responseClass = responseClass;
         this.streamEventContentExtractor = streamEventContentExtractor;
         this.logStreamingResponses = logStreamingResponses;
+        this.breakOnToolCalled = breakOnToolCalled;
     }
 
     StreamingResponseHandling onPartialResponse(Consumer<RespContent> partialResponseHandler) {
@@ -171,6 +177,18 @@ public class StreamingRequestExecutor<Req, Resp, RespContent> {
                     RespContent responseContent = streamEventContentExtractor.apply(response);
                     if (responseContent != null) {
                         partialResponseHandler.accept(responseContent); // do not handle exception, fail-fast
+
+                        // sepeical case for dify calling
+                        if (breakOnToolCalled) {
+                            DifyStreamingChatCompletionResponse difyResponse = (DifyStreamingChatCompletionResponse) responseContent;
+                            if ("agent_thought".equals(difyResponse.getEvent())
+                                && StringUtil.hasText(difyResponse.getTool())
+                                && StringUtil.hasText(difyResponse.getObservation())) {
+                                streamingCompletionCallback.run();
+                                responseHandle.cancelled = true;
+                                return;
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     errorHandler.accept(e);

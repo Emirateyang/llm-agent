@@ -22,6 +22,8 @@ public class DifyMessageRequest {
     private boolean autoGenerateName = true;
     private String query;
 
+    private boolean breakOnToolCalled = false;
+
     private DifyMessageRequest(Builder builder) {
         this.inputs = builder.inputs;
         this.responseMode = builder.responseMode;
@@ -30,6 +32,7 @@ public class DifyMessageRequest {
         this.autoGenerateName = builder.autoGenerateName;
         this.user = builder.user;
         this.query = builder.query;
+        this.breakOnToolCalled = builder.breakOnToolCalled;
     }
 
     public static Builder builder() {
@@ -48,6 +51,8 @@ public class DifyMessageRequest {
 
         private String query;
 
+        private boolean breakOnToolCalled = false;
+
         private Builder() {
         }
 
@@ -59,6 +64,7 @@ public class DifyMessageRequest {
             user(instance.user);
             files(instance.files);
             query(instance.query);
+            breakOnToolCalled(instance.breakOnToolCalled);
             return this;
         }
 
@@ -95,6 +101,11 @@ public class DifyMessageRequest {
 
         public Builder query(String query) {
             this.query = query;
+            return this;
+        }
+
+        public Builder breakOnToolCalled(boolean breakOnToolCalled) {
+            this.breakOnToolCalled = breakOnToolCalled;
             return this;
         }
 

@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.llmagent.dify.DifyHelper.toDifyMessage;
@@ -39,6 +40,7 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
     private final boolean autoGenerateName;
     private final List<DifyFileContent> files;
 
+    private final boolean breakOnToolCalled;
     @Builder
     public DifyStreamingChatModel(String baseUrl,
                                   String apiKey,
@@ -47,14 +49,15 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
                                   Map<String, Object> inputs,
                                   boolean autoGenerateName,
                                   List<DifyFileContent> files,
-                                  String responseMode,
+                                  boolean breakOnToolCalled,
                                   Duration timeout,
                                   Boolean logRequests,
                                   Boolean logResponses) {
 
         timeout = ObjectUtil.getOrDefault(timeout, Duration.ofSeconds(60));
         inputs = ObjectUtil.getOrDefault(inputs, Map.of());
-        responseMode = ObjectUtil.getOrDefault(responseMode, ResponseMode.STREAMING.toString());
+        breakOnToolCalled = ObjectUtil.getOrDefault(breakOnToolCalled, false);
+        String responseMode = ResponseMode.STREAMING.toString();
 
         this.client = DifyClient.builder()
                 .apiKey(apiKey)
@@ -65,6 +68,7 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
                 .writeTimeout(timeout)
                 .logRequests(logRequests)
                 .logResponses(logResponses)
+                .breakOnToolCalled(breakOnToolCalled)
                 .build();
 
         this.user = user;
@@ -73,6 +77,7 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
         this.inputs = inputs;
         this.autoGenerateName = autoGenerateName;
         this.files = files;
+        this.breakOnToolCalled = breakOnToolCalled;
     }
 
     @Override
@@ -84,6 +89,7 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
                 .responseMode(responseMode)
                 .conversationId(conversationId)
                 .autoGenerateName(autoGenerateName)
+                .breakOnToolCalled(breakOnToolCalled)
                 .user(user);
         if (this.files != null) {
             requestBuilder.files(files);
@@ -94,7 +100,6 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
         DifyStreamingResponseBuilder responseBuilder = new DifyStreamingResponseBuilder();
 
         AtomicReference<String> responseId = new AtomicReference<>();
-
         client.streamingChatCompletion(request)
                 .onPartialResponse(partialResponse -> {
                     responseBuilder.append(partialResponse);
