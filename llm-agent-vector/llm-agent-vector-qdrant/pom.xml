@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.llmagent</groupId>
         <artifactId>llm-agent-vector</artifactId>
-        <version>1.0.0-beta.2</version>
+        <version>1.0.0-beta.3</version>
     </parent>
 
     <artifactId>llm-agent-vector-qdrant</artifactId>
