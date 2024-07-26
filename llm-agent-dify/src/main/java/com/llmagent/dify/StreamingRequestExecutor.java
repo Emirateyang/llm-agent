@@ -175,6 +175,11 @@ public class StreamingRequestExecutor<Req, Resp, RespContent> {
                 } catch (Exception e) {
                     errorHandler.accept(e);
                 }
+
+                // dify自己处理了[Done]，需要检查message_end
+                if (data.contains("\"event\": \"message_end\"")) {
+                    streamingCompletionCallback.run();
+                }
             }
 
             @Override

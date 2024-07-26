@@ -186,6 +186,7 @@ public class OpenAiStreamingChatModel implements StreamingChatLanguageModel, Tok
                     }
                 })
                 .onComplete(() -> {
+
                     LlmResponse<AiMessage> response = createResponse(responseBuilder, toolThatMustBeExecuted);
 
                     ChatModelResponse modelListenerResponse = createModelListenerResponse(

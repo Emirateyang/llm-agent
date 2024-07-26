@@ -106,6 +106,7 @@ public class AiMessage implements ChatMessage {
         return "AiMessage {" +
                 " content = " + StringUtil.quoted(content) +
                 " toolExecutionRequests = " + toolRequests +
+                " conversationId = " + conversationId +
                 " }";
     }
 
@@ -137,6 +138,10 @@ public class AiMessage implements ChatMessage {
      */
     public static AiMessage from(List<ToolRequest> toolExecutionRequests) {
         return new AiMessage(toolExecutionRequests);
+    }
+
+    public static AiMessage from(String text, List<ToolRequest> toolExecutionRequests) {
+        return new AiMessage(text, toolExecutionRequests);
     }
 
     /**

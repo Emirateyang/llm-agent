@@ -9,6 +9,9 @@ public class ToolRequest {
     private final String name;
     private final String arguments;
 
+    // dify only
+    private String observation;
+
     /**
      * Creates a {@link ToolRequest} from a {@link Builder}.
      * @param builder the builder.
@@ -90,6 +93,8 @@ public class ToolRequest {
         private String name;
         private String arguments;
 
+        private String observation;
+
         /**
          * Creates a builder for {@code ToolRequest}.
          */
@@ -123,6 +128,11 @@ public class ToolRequest {
          */
         public Builder arguments(String arguments) {
             this.arguments = arguments;
+            return this;
+        }
+
+        public Builder observation(String observation) {
+            this.observation = observation;
             return this;
         }
 

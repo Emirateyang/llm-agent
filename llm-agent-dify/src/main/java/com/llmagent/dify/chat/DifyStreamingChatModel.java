@@ -94,7 +94,6 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
         DifyStreamingResponseBuilder responseBuilder = new DifyStreamingResponseBuilder();
 
         AtomicReference<String> responseId = new AtomicReference<>();
-        AtomicReference<String> responseModel = new AtomicReference<>();
 
         client.streamingChatCompletion(request)
                 .onPartialResponse(partialResponse -> {
@@ -107,7 +106,6 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
                 })
                 .onComplete(() -> {
                     LlmResponse<AiMessage> response = createResponse(responseBuilder);
-
                     handler.onComplete(response);
                 })
                 .onError(handler::onError)
@@ -120,6 +118,10 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
 
     private static void handle(DifyStreamingChatCompletionResponse partialResponse,
                                StreamingResponseHandler<AiMessage> handler) {
+
+        if ("message_end".equalsIgnoreCase(partialResponse.getType())) {
+            return;
+        }
 
         String content = partialResponse.getAnswer();
         if (StringUtil.hasText(content)) {

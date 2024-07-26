@@ -36,6 +36,8 @@ public class DifyStreamingResponseBuilder {
     private DifyUsage usage;
     private List<RetrieverResource> retrieverResources;
 
+    private String conversationId = "";
+
     public DifyStreamingResponseBuilder() {
     }
 
@@ -54,10 +56,12 @@ public class DifyStreamingResponseBuilder {
         }
 
         if ("message_end".equals(event)) {
+            conversationId = partialResponse.getConversationId();
             usage = partialResponse.getMetadata().getUsage();
             if (partialResponse.getMetadata().getRetrieverResources() != null) {
                 retrieverResources = partialResponse.getMetadata().getRetrieverResources();
             }
+            return;
         }
 
         if (StringUtil.hasText(answer)) {
@@ -75,32 +79,36 @@ public class DifyStreamingResponseBuilder {
                             = indexToToolExecutionRequestBuilder.computeIfAbsent(t, idx -> new ToolRequestBuilder());
                     toolRequestBuilder.nameBuilder.append(t);
                     toolRequestBuilder.argumentsBuilder.append(jsonObject.getAsJsonObject(t).toString());
+                    toolRequestBuilder.observationBuilder.append(partialResponse.getObservation());
                 }
             }
         }
     }
 
     public LlmResponse<AiMessage> build() {
-
-        String content = contentBuilder.toString();
-        if (StringUtil.hasText(content)) {
-            return LlmResponse.from(
-                    AiMessage.from(content),
-                    tokenUsageFrom(usage),
-                    retrieverResourceFrom(retrieverResources)
-            );
-        }
-
+        List<ToolRequest> toolRequests = null;
         if (!indexToToolExecutionRequestBuilder.isEmpty()) {
-            List<ToolRequest> toolRequests = indexToToolExecutionRequestBuilder.values().stream()
+            toolRequests = indexToToolExecutionRequestBuilder.values().stream()
                     .map(it -> ToolRequest.builder()
                             .id(it.idBuilder.toString())
                             .name(it.nameBuilder.toString())
                             .arguments(it.argumentsBuilder.toString())
                             .build())
                     .collect(toList());
-            return LlmResponse.from(
-                    AiMessage.from(toolRequests),
+        }
+
+        String content = contentBuilder.toString();
+        if (StringUtil.hasText(content) && toolRequests == null) {
+            AiMessage aiMessage = AiMessage.from(content);
+            aiMessage.setConversationId(conversationId);
+            return LlmResponse.from(aiMessage,
+                    tokenUsageFrom(usage),
+                    retrieverResourceFrom(retrieverResources)
+            );
+        } else if (StringUtil.hasText(content) && toolRequests != null) {
+            AiMessage aiMessage = AiMessage.from(content, toolRequests);
+            aiMessage.setConversationId(conversationId);
+            return LlmResponse.from(aiMessage,
                     tokenUsageFrom(usage),
                     retrieverResourceFrom(retrieverResources)
             );
@@ -144,5 +152,6 @@ public class DifyStreamingResponseBuilder {
         private final StringBuffer idBuilder = new StringBuffer();
         private final StringBuffer nameBuilder = new StringBuffer();
         private final StringBuffer argumentsBuilder = new StringBuffer();
+        private final StringBuffer observationBuilder = new StringBuffer();
     }
 }
