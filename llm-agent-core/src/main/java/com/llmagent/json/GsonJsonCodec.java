@@ -45,7 +45,7 @@ public class GsonJsonCodec implements JsonUtil.JsonCodec {
     /**
      * Reads a JSON string and returns an object of the specified type.
      *
-     * <p>As a special case, if the type is {@link Map}, the returned object is
+     * <p>As a special case, if the type is {@link java.util.Map}, the returned object is
      * parsed as a {@code Map<String, String>}.
      *
      * @param json JSON string to be parsed.

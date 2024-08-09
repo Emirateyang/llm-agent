@@ -9,8 +9,8 @@
         <version>1.0.0-beta.4</version>
     </parent>
 
-    <artifactId>llm-agent-openai</artifactId>
-    <description>llm agent components for team who use openai api</description>
+    <artifactId>llm-agent-azure</artifactId>
+    <description>llm agent components for team who use azure AI services</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -65,6 +65,17 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>${gson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-ai-openai</artifactId>
+            <version>1.0.0-beta.10</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+            <version>1.13.2</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

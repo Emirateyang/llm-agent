@@ -59,14 +59,14 @@ public interface Tokenizer {
      * @param toolRequests the tool execution request.
      * @return the estimated count of tokens.
      */
-    int estimateTokenCountInToolExecutionRequests(Iterable<ToolRequest> toolRequests);
+    int estimateTokenCountInToolRequests(Iterable<ToolRequest> toolRequests);
 
     /**
      * Estimates the count of tokens in the given tool execution request.
      * @param toolRequest the tool execution request.
      * @return the estimated count of tokens.
      */
-    default int estimateTokenCountInForcefulToolExecutionRequest(ToolRequest toolRequest) {
-        return estimateTokenCountInToolExecutionRequests(Collections.singletonList(toolRequest));
+    default int estimateTokenCountInForcefulToolRequest(ToolRequest toolRequest) {
+        return estimateTokenCountInToolRequests(Collections.singletonList(toolRequest));
     }
 }

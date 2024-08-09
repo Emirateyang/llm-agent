@@ -6,7 +6,7 @@
 
     <groupId>fun.krinsiman.llm</groupId>
     <artifactId>parent</artifactId>
-    <version>1.0.0-beta.3</version>
+    <version>1.0.0-beta.4</version>
     <packaging>pom</packaging>
 
     <name>llm-agent</name>
@@ -28,6 +28,7 @@
         <module>llm-agent-vector</module>
         <module>llm-agent-openai</module>
         <module>llm-agent-dify</module>
+        <module>llm-agent-azure</module>
     </modules>
 
     <properties>
@@ -41,7 +42,7 @@
         <fastjson.version>2.0.51</fastjson.version>
         <jackson-databind.version>2.16.1</jackson-databind.version>
         <spring-boot.version>3.3.0</spring-boot.version>
-        <llm-agent.version>1.0.0-beta.3</llm-agent.version>
+        <llm-agent.version>1.0.0-beta.4</llm-agent.version>
         <postgresql.version>42.7.2</postgresql.version>
         <pgvector.version>0.1.4</pgvector.version>
         <spring-framework.version>6.1.4</spring-framework.version>

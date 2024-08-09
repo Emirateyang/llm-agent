@@ -1,69 +1,59 @@
-package com.llmagent.openai;
+package com.llmagent.azure;
 
 import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.IntArrayList;
+import com.llmagent.azure.chat.AzureAiChatModelName;
+import com.llmagent.azure.embedding.AzureAiEmbeddingModelName;
 import com.llmagent.data.message.*;
 import com.llmagent.llm.Tokenizer;
 import com.llmagent.llm.tool.ToolParameters;
 import com.llmagent.llm.tool.ToolRequest;
 import com.llmagent.llm.tool.ToolSpecification;
-import com.llmagent.openai.chat.ChatCompletionModel;
-import com.llmagent.openai.completion.CompletionModel;
-import com.llmagent.openai.embedding.EmbeddingModel;
 import com.llmagent.util.JsonUtil;
 import com.llmagent.util.StringUtil;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import static com.llmagent.azure.chat.AzureAiChatModelName.*;
 import static com.llmagent.exception.Exceptions.illegalArgument;
-import static com.llmagent.openai.chat.ChatCompletionModel.*;
-import static com.llmagent.util.ValidationUtil.ensureNotBlank;
-import static java.util.Collections.singletonList;
 
-public class OpenAiTokenizer implements Tokenizer {
-
+public class AzureAiTokenizer implements Tokenizer {
     private final String modelName;
     private final Optional<Encoding> encoding;
 
     /**
-     * Creates an instance of the {@code OpenAiTokenizer} for the "gpt-3.5-turbo" model.
-     * It should be suitable for all current OpenAI models, as they all use the same cl100k_base encoding.
+     * Creates an instance of the {@code AzureOpenAiTokenizer} for the "gpt-3.5-turbo" model.
+     * It should be suitable for most OpenAI models, as most of them use the same cl100k_base encoding (except for GPT-4o).
      */
-    public OpenAiTokenizer() {
-        this(GPT_3_5_TURBO.toString());
+    public AzureAiTokenizer() {
+        this(GPT_3_5_TURBO.modelType());
     }
 
     /**
-     * Creates an instance of the {@code OpenAiTokenizer} for a given {@link ChatCompletionModel}.
+     * Creates an instance of the {@code AzureOpenAiTokenizer} for a given {@link AzureAiChatModelName}.
      */
-    public OpenAiTokenizer(ChatCompletionModel modelName) {
-        this(modelName.toString());
+    public AzureAiTokenizer(AzureAiChatModelName modelName) {
+        this(modelName.modelType());
     }
 
     /**
-     * Creates an instance of the {@code OpenAiTokenizer} for a given {@link EmbeddingModel}.
+     * Creates an instance of the {@code AzureOpenAiTokenizer} for a given {@link AzureAiEmbeddingModelName}.
      */
-    public OpenAiTokenizer(EmbeddingModel modelName) {
-        this(modelName.toString());
+    public AzureAiTokenizer(AzureAiEmbeddingModelName modelName) {
+        this(modelName.modelType());
     }
 
     /**
-     * Creates an instance of the {@code OpenAiTokenizer} for a given {@link CompletionModel}.
+     * Creates an instance of the {@code AzureOpenAiTokenizer} for a given model name.
      */
-    public OpenAiTokenizer(CompletionModel modelName) {
-        this(modelName.toString());
-    }
-
-    /**
-     * Creates an instance of the {@code OpenAiTokenizer} for a given model name.
-     */
-    public OpenAiTokenizer(String modelName) {
-        this.modelName = ensureNotBlank(modelName, "modelName");
-        // If the model is unknown, we should NOT fail fast during the creation of OpenAiTokenizer.
+    public AzureAiTokenizer(String modelName) {
+        this.modelName = modelName;
+        // If the model is unknown, we should NOT fail fast during the creation of AzureOpenAiTokenizer.
         // Doing so would cause the failure of every OpenAI***Model that uses this tokenizer.
         // This is done to account for situations when a new OpenAI model is available,
         // but JTokkit does not yet support it.
@@ -135,16 +125,16 @@ public class OpenAiTokenizer implements Tokenizer {
             }
             if (aiMessage.toolRequests().size() == 1) {
                 tokenCount -= 1;
-                ToolRequest ToolRequest = aiMessage.toolRequests().get(0);
-                tokenCount += estimateTokenCountInText(ToolRequest.name()) * 2;
-                tokenCount += estimateTokenCountInText(ToolRequest.arguments());
+                ToolRequest toolRequest = aiMessage.toolRequests().get(0);
+                tokenCount += estimateTokenCountInText(toolRequest.name()) * 2;
+                tokenCount += estimateTokenCountInText(toolRequest.arguments());
             } else {
                 tokenCount += 15;
-                for (ToolRequest ToolRequest : aiMessage.toolRequests()) {
+                for (ToolRequest toolRequest : aiMessage.toolRequests()) {
                     tokenCount += 7;
-                    tokenCount += estimateTokenCountInText(ToolRequest.name());
+                    tokenCount += estimateTokenCountInText(toolRequest.name());
 
-                    Map<?, ?> arguments = JsonUtil.fromJson(ToolRequest.arguments(), Map.class);
+                    Map<?, ?> arguments = JsonUtil.fromJson(toolRequest.arguments(), Map.class);
                     for (Map.Entry<?, ?> argument : arguments.entrySet()) {
                         tokenCount += 2;
                         tokenCount += estimateTokenCountInText(argument.getKey().toString());
@@ -162,7 +152,7 @@ public class OpenAiTokenizer implements Tokenizer {
     }
 
     private int extraTokensPerMessage() {
-        if (modelName.equals("gpt-3.5-turbo-0301")) {
+        if (modelName.equals(GPT_3_5_TURBO_0301.modelName())) {
             return 4;
         } else {
             return 3;
@@ -170,7 +160,7 @@ public class OpenAiTokenizer implements Tokenizer {
     }
 
     private int extraTokensPerName() {
-        if (modelName.equals("gpt-3.5-turbo-0301")) {
+        if (modelName.equals(GPT_3_5_TURBO_0301.toString())) {
             return -1; // if there's a name, the role is omitted
         } else {
             return 1;
@@ -250,7 +240,7 @@ public class OpenAiTokenizer implements Tokenizer {
 
     @Override
     public int estimateTokenCountInForcefulToolSpecification(ToolSpecification toolSpecification) {
-        int tokenCount = estimateTokenCountInToolSpecifications(singletonList(toolSpecification));
+        int tokenCount = estimateTokenCountInToolSpecifications(Collections.singletonList(toolSpecification));
         tokenCount += 4;
         tokenCount += estimateTokenCountInText(toolSpecification.name());
         if (isOneOfLatestModels()) {
@@ -285,7 +275,7 @@ public class OpenAiTokenizer implements Tokenizer {
     }
 
     @Override
-    public int estimateTokenCountInToolRequests(Iterable<ToolRequest> ToolRequests) {
+    public int estimateTokenCountInToolRequests(Iterable<ToolRequest> toolRequests) {
 
         int tokenCount = 0;
 
@@ -295,12 +285,12 @@ public class OpenAiTokenizer implements Tokenizer {
 
         int totalArgumentsCount = 0;
 
-        for (ToolRequest ToolRequest : ToolRequests) {
+        for (ToolRequest toolRequest : toolRequests) {
             tokenCount += 4;
-            tokenCount += estimateTokenCountInText(ToolRequest.name());
-            tokenCount += estimateTokenCountInText(ToolRequest.arguments());
+            tokenCount += estimateTokenCountInText(toolRequest.name());
+            tokenCount += estimateTokenCountInText(toolRequest.arguments());
 
-            int argumentCount = countArguments(ToolRequest.arguments());
+            int argumentCount = countArguments(toolRequest.arguments());
             if (argumentCount == 0) {
                 toolsWithoutArgumentsCount++;
             } else {
@@ -337,23 +327,23 @@ public class OpenAiTokenizer implements Tokenizer {
     }
 
     @Override
-    public int estimateTokenCountInForcefulToolRequest(ToolRequest ToolRequest) {
+    public int estimateTokenCountInForcefulToolRequest(ToolRequest toolRequest) {
 
         if (isOneOfLatestGpt4Models()) {
-            int argumentsCount = countArguments(ToolRequest.arguments());
+            int argumentsCount = countArguments(toolRequest.arguments());
             if (argumentsCount == 0) {
                 return 1;
             } else {
-                return estimateTokenCountInText(ToolRequest.arguments());
+                return estimateTokenCountInText(toolRequest.arguments());
             }
         }
 
-        int tokenCount = estimateTokenCountInToolRequests(singletonList(ToolRequest));
+        int tokenCount = estimateTokenCountInToolRequests(Collections.singletonList(toolRequest));
         tokenCount -= 4;
-        tokenCount -= estimateTokenCountInText(ToolRequest.name());
+        tokenCount -= estimateTokenCountInText(toolRequest.name());
 
         if (modelName.equals(GPT_3_5_TURBO_1106.toString())) {
-            int argumentsCount = countArguments(ToolRequest.arguments());
+            int argumentsCount = countArguments(toolRequest.arguments());
             if (argumentsCount == 0) {
                 return 1;
             }
@@ -377,13 +367,12 @@ public class OpenAiTokenizer implements Tokenizer {
     }
 
     private boolean isOneOfLatestGpt3Models() {
-        // TODO add GPT_3_5_TURBO once it points to GPT_3_5_TURBO_1106
         return modelName.equals(GPT_3_5_TURBO_1106.toString())
-                || modelName.equals(GPT_3_5_TURBO_0125.toString());
+                || modelName.equals(GPT_3_5_TURBO.toString());
     }
 
     private boolean isOneOfLatestGpt4Models() {
-        return modelName.equals(GPT_4_TURBO_PREVIEW.toString())
+        return modelName.equals(GPT_4_TURBO.toString())
                 || modelName.equals(GPT_4_1106_PREVIEW.toString())
                 || modelName.equals(GPT_4_0125_PREVIEW.toString());
     }
