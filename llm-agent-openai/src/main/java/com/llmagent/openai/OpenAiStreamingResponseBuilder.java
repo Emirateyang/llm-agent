@@ -181,10 +181,10 @@ public class OpenAiStreamingResponseBuilder {
         if (forcefulToolExecution) {
             // OpenAI calculates output tokens differently when tool is executed forcefully
             for (ToolRequest toolRequest : toolRequests) {
-                outputTokenCount += tokenizer.estimateTokenCountInForcefulToolExecutionRequest(toolRequest);
+                outputTokenCount += tokenizer.estimateTokenCountInForcefulToolRequest(toolRequest);
             }
         } else {
-            outputTokenCount = tokenizer.estimateTokenCountInToolExecutionRequests(toolRequests);
+            outputTokenCount = tokenizer.estimateTokenCountInToolRequests(toolRequests);
         }
 
         return new TokenUsage(inputTokenCount, outputTokenCount);
