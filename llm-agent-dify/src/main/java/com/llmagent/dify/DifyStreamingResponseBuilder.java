@@ -71,7 +71,7 @@ public class DifyStreamingResponseBuilder {
 
         if (StringUtil.hasText(tool) && StringUtil.hasText(toolInput)) {
             String observation = partialResponse.getObservation();
-            if (StringUtil.noText(observation)) {
+            if (!StringUtil.noText(observation)) {
                 String[] tools = tool.split(";");
                 JsonObject jsonObject = JsonParser.parseString(toolInput).getAsJsonObject();
                 for (String t : tools) {
@@ -81,6 +81,7 @@ public class DifyStreamingResponseBuilder {
                     toolRequestBuilder.argumentsBuilder.append(jsonObject.getAsJsonObject(t).toString());
                     toolRequestBuilder.observationBuilder.append(partialResponse.getObservation());
                 }
+                conversationId = partialResponse.getConversationId();
             }
         }
     }
@@ -89,11 +90,15 @@ public class DifyStreamingResponseBuilder {
         List<ToolRequest> toolRequests = null;
         if (!indexToToolExecutionRequestBuilder.isEmpty()) {
             toolRequests = indexToToolExecutionRequestBuilder.values().stream()
-                    .map(it -> ToolRequest.builder()
-                            .id(it.idBuilder.toString())
-                            .name(it.nameBuilder.toString())
-                            .arguments(it.argumentsBuilder.toString())
-                            .build())
+                    .map(it -> {
+                                ToolRequest toolRequest = ToolRequest.builder()
+                                .id(it.idBuilder.toString())
+                                .name(it.nameBuilder.toString())
+                                .arguments(it.argumentsBuilder.toString())
+                                .build();
+                                toolRequest.setObservation(it.observationBuilder.toString());
+                                return toolRequest;
+                    })
                     .collect(toList());
         }
 

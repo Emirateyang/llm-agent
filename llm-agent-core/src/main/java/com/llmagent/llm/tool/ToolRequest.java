@@ -12,6 +12,10 @@ public class ToolRequest {
     // dify only
     private String observation;
 
+    public void setObservation(String observation) {
+        this.observation = observation;
+    }
+
     /**
      * Creates a {@link ToolRequest} from a {@link Builder}.
      * @param builder the builder.
@@ -56,7 +60,8 @@ public class ToolRequest {
     private boolean equalTo(ToolRequest another) {
         return Objects.equals(id, another.id)
                 && Objects.equals(name, another.name)
-                && Objects.equals(arguments, another.arguments);
+                && Objects.equals(arguments, another.arguments)
+                && Objects.equals(observation, another.observation);
     }
 
     @Override
@@ -65,6 +70,7 @@ public class ToolRequest {
         h += (h << 5) + Objects.hashCode(id);
         h += (h << 5) + Objects.hashCode(name);
         h += (h << 5) + Objects.hashCode(arguments);
+        h += (h << 5) + Objects.hashCode(observation);
         return h;
     }
 
@@ -74,6 +80,7 @@ public class ToolRequest {
                 + " id = " + StringUtil.quoted(id)
                 + ", name = " + StringUtil.quoted(name)
                 + ", arguments = " + StringUtil.quoted(arguments)
+                + ", observation = " + StringUtil.quoted(observation)
                 + " }";
     }
 
