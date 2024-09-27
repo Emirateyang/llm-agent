@@ -15,6 +15,12 @@ public enum ChatCompletionModel {
 
     GPT_4_O("gpt-4o"),
 
+    GPT_4_O_mini("gpt-4o-mini"),
+
+    GPT_O1_mini("o1-mini"),
+
+    GPT_O1_preview("o1-preview"),
+
     GPT_4_TURBO_PREVIEW("gpt-4-turbo-preview"), // alias
     GPT_4_1106_PREVIEW("gpt-4-1106-preview"),
     GPT_4_0125_PREVIEW("gpt-4-0125-preview"),

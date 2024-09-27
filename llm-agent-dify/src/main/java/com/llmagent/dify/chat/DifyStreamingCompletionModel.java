@@ -1,12 +1,11 @@
 package com.llmagent.dify.chat;
 
 import com.llmagent.data.message.AiMessage;
-import com.llmagent.data.message.ChatMessage;
-import com.llmagent.dify.DifyStreamingChatModelBuilderFactory;
+import com.llmagent.dify.DifyStreamingCompletionModelBuilderFactory;
 import com.llmagent.dify.DifyStreamingResponseBuilder;
 import com.llmagent.dify.client.DifyClient;
 import com.llmagent.llm.StreamingResponseHandler;
-import com.llmagent.llm.chat.StreamingChatLanguageModel;
+import com.llmagent.llm.completion.StreamingCompletionModel;
 import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.util.ObjectUtil;
 import com.llmagent.util.StringUtil;
@@ -16,10 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.llmagent.dify.DifyHelper.toDifyMessage;
 import static com.llmagent.util.ServiceHelper.loadFactories;
 import static com.llmagent.util.StringUtil.isNullOrBlank;
 
@@ -29,7 +26,7 @@ import static com.llmagent.util.StringUtil.isNullOrBlank;
  * You can find description of parameters in your Dify applications.
  */
 @Slf4j
-public class DifyStreamingChatModel implements StreamingChatLanguageModel {
+public class DifyStreamingCompletionModel implements StreamingCompletionModel {
 
     private final DifyClient client;
     private final String user;
@@ -40,23 +37,20 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
     private final boolean autoGenerateName;
     private final List<DifyFileContent> files;
 
-    private final boolean breakOnToolCalled;
     @Builder
-    public DifyStreamingChatModel(String baseUrl,
-                                  String apiKey,
-                                  String user,
-                                  String conversationId,
-                                  Map<String, Object> inputs,
-                                  boolean autoGenerateName,
-                                  List<DifyFileContent> files,
-                                  boolean breakOnToolCalled,
-                                  Duration timeout,
-                                  Boolean logRequests,
-                                  Boolean logResponses) {
+    public DifyStreamingCompletionModel(String baseUrl,
+                                        String apiKey,
+                                        String user,
+                                        String conversationId,
+                                        Map<String, Object> inputs,
+                                        boolean autoGenerateName,
+                                        List<DifyFileContent> files,
+                                        Duration timeout,
+                                        Boolean logRequests,
+                                        Boolean logResponses) {
 
         timeout = ObjectUtil.getOrDefault(timeout, Duration.ofSeconds(60));
         inputs = ObjectUtil.getOrDefault(inputs, Map.of());
-        breakOnToolCalled = ObjectUtil.getOrDefault(breakOnToolCalled, false);
         String responseMode = ResponseMode.STREAMING.toString();
 
         this.client = DifyClient.builder()
@@ -68,7 +62,7 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
                 .writeTimeout(timeout)
                 .logRequests(logRequests)
                 .logResponses(logResponses)
-                .breakOnToolCalled(breakOnToolCalled)
+                .breakOnToolCalled(false)
                 .build();
 
         this.user = user;
@@ -77,19 +71,15 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
         this.inputs = inputs;
         this.autoGenerateName = autoGenerateName;
         this.files = files;
-        this.breakOnToolCalled = breakOnToolCalled;
     }
-
     @Override
-    public void generate(List<ChatMessage> messages, StreamingResponseHandler<AiMessage> handler) {
+    public void generate(String prompt, StreamingResponseHandler<AiMessage> handler) {
 
         DifyMessageRequest.Builder requestBuilder = DifyMessageRequest.builder()
                 .inputs(inputs)
-                .query(toDifyMessage(messages))
                 .responseMode(responseMode)
                 .conversationId(conversationId)
                 .autoGenerateName(autoGenerateName)
-                .breakOnToolCalled(breakOnToolCalled)
                 .user(user);
         if (this.files != null) {
             requestBuilder.files(files);
@@ -100,7 +90,7 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
         DifyStreamingResponseBuilder responseBuilder = new DifyStreamingResponseBuilder();
 
         AtomicReference<String> responseId = new AtomicReference<>();
-        client.streamingChatCompletion(request)
+        client.streamingCompletion(request)
                 .onPartialResponse(partialResponse -> {
                     responseBuilder.append(partialResponse);
                     handle(partialResponse, handler);
@@ -134,20 +124,20 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
         }
     }
 
-    public static DifyStreamingChatModel withApiKey(String apiKey) {
+    public static DifyStreamingCompletionModel withApiKey(String apiKey) {
         return builder().apiKey(apiKey).build();
     }
 
-    public static DifyStreamingChatModelBuilder builder() {
-        for (DifyStreamingChatModelBuilderFactory factory : loadFactories(DifyStreamingChatModelBuilderFactory.class)) {
+    public static DifyStreamingCompletionModelBuilder builder() {
+        for (DifyStreamingCompletionModelBuilderFactory factory : loadFactories(DifyStreamingCompletionModelBuilderFactory.class)) {
             return factory.get();
         }
-        return new DifyStreamingChatModelBuilder();
+        return new DifyStreamingCompletionModelBuilder();
     }
 
-    public static class DifyStreamingChatModelBuilder {
+    public static class DifyStreamingCompletionModelBuilder {
 
-        public DifyStreamingChatModelBuilder() {
+        public DifyStreamingCompletionModelBuilder() {
             // This is public so it can be extended
             // By default with Lombok it becomes package private
         }

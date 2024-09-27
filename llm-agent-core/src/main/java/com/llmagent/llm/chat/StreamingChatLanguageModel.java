@@ -34,8 +34,6 @@ public interface StreamingChatLanguageModel {
         generate(Collections.singletonList(userMessage), handler);
     }
 
-    void generateCompletions(StreamingResponseHandler<AiMessage> handler);
-
     /**
      * Generates a response from the model based on a sequence of messages.
      * Typically, the sequence contains messages in the following order:
