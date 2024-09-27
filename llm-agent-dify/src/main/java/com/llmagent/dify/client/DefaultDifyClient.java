@@ -105,24 +105,22 @@ public class DefaultDifyClient extends DifyClient {
 //        );
 //    }
 //
-//    @Override
-//    public SyncOrAsyncOrStreaming<String> completion(String prompt) {
-//        CompletionRequest request = CompletionRequest.builder().prompt(prompt).build();
-//
-//        CompletionRequest syncRequest = CompletionRequest.builder().from(request).stream(null).build();
-//
-//        return new RequestExecutor<>(
-//                openAiApi.completions(syncRequest, apiVersion),
-//                CompletionResponse::text,
-//                okHttpClient,
-//                formatUrl("completions"),
-//                () -> CompletionRequest.builder().from(request).stream(true).build(),
-//                CompletionResponse.class,
-//                CompletionResponse::text,
-//                logStreamingResponses
-//        );
-//    }
-//
+    @Override
+    public SyncOrAsyncOrStreaming<DifyStreamingChatCompletionResponse> streamingCompletion(DifyMessageRequest request) {
+        DifyMessageRequest syncRequest = DifyMessageRequest.builder().from(request).build();
+
+        return new RequestExecutor<>(
+                difyApi.streamingCompletion(syncRequest),
+                r -> r,
+                okHttpClient,
+                formatUrl("completion-messages"),
+                () -> DifyMessageRequest.builder().from(request).build(),
+                DifyStreamingChatCompletionResponse.class,
+                r -> r,
+                logStreamingResponses,
+                false
+        );
+    }
     @Override
     public SyncOrAsyncOrStreaming<DifyStreamingChatCompletionResponse> streamingChatCompletion(DifyMessageRequest request) {
         DifyMessageRequest syncRequest = DifyMessageRequest.builder().from(request).build();

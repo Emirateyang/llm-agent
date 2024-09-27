@@ -17,6 +17,8 @@ public abstract class DifyClient {
 
     public abstract SyncOrAsync<DifyChatCompletionResponse> chatCompletion(DifyMessageRequest request);
 
+    public abstract SyncOrAsyncOrStreaming<DifyStreamingChatCompletionResponse> streamingCompletion(DifyMessageRequest request);
+
     public static DifyClient.Builder builder() {
         for (DifyClientBuilderFactory factory : ServiceHelper.loadFactories(DifyClientBuilderFactory.class)) {
             return factory.get();

@@ -18,4 +18,8 @@ public interface DifyApi {
     @POST("chat-messages")
     @Headers("Content-Type: application/json")
     Call<DifyStreamingChatCompletionResponse> streamingChatCompletion(@Body DifyMessageRequest request);
+
+    @POST("completion-messages")
+    @Headers("Content-Type: application/json")
+    Call<DifyStreamingChatCompletionResponse> streamingCompletion(@Body DifyMessageRequest request);
 }

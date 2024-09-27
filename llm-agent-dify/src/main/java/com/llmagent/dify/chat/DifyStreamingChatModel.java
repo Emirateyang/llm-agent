@@ -117,6 +117,41 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
                 .execute();
     }
 
+    @Override
+    public void generateCompletions(StreamingResponseHandler<AiMessage> handler) {
+
+        DifyMessageRequest.Builder requestBuilder = DifyMessageRequest.builder()
+                .inputs(inputs)
+                .responseMode(responseMode)
+                .conversationId(conversationId)
+                .autoGenerateName(autoGenerateName)
+                .user(user);
+        if (this.files != null) {
+            requestBuilder.files(files);
+        }
+
+        DifyMessageRequest request = requestBuilder.build();
+
+        DifyStreamingResponseBuilder responseBuilder = new DifyStreamingResponseBuilder();
+
+        AtomicReference<String> responseId = new AtomicReference<>();
+        client.streamingCompletion(request)
+                .onPartialResponse(partialResponse -> {
+                    responseBuilder.append(partialResponse);
+                    handle(partialResponse, handler);
+
+                    if (!isNullOrBlank(partialResponse.getId())) {
+                        responseId.set(partialResponse.getId());
+                    }
+                })
+                .onComplete(() -> {
+                    LlmResponse<AiMessage> response = createResponse(responseBuilder);
+                    handler.onComplete(response);
+                })
+                .onError(handler::onError)
+                .execute();
+    }
+
     private LlmResponse<AiMessage> createResponse(DifyStreamingResponseBuilder responseBuilder) {
         return responseBuilder.build();
     }
