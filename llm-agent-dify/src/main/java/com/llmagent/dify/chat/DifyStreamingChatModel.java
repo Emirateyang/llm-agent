@@ -1,5 +1,7 @@
 package com.llmagent.dify.chat;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.llmagent.data.message.AiMessage;
 import com.llmagent.data.message.ChatMessage;
 import com.llmagent.dify.DifyStreamingChatModelBuilderFactory;
@@ -124,13 +126,41 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
     private static void handle(DifyStreamingChatCompletionResponse partialResponse,
                                StreamingResponseHandler<AiMessage> handler) {
 
-        if ("message_end".equalsIgnoreCase(partialResponse.getType())) {
+        String event = partialResponse.getEvent();
+        String tool = partialResponse.getTool();
+        String toolInput = partialResponse.getToolInput();
+        Integer position = partialResponse.getPosition();
+        String thought = partialResponse.getThought();
+        String content = partialResponse.getAnswer();
+        String observation = partialResponse.getObservation();
+//        System.out.println("event:" + event + " | toolInput: " + toolInput + " | observation: " + partialResponse.getObservation() + " | answer: " + partialResponse.getAnswer() + " | position: " + position + " | thought: " + thought);
+
+        StreamResponse4Customer customerResponse = null;
+        if ("message_end".equalsIgnoreCase(event)) {
+            customerResponse = StreamResponse4Customer.builder().event("done").build();
+            handler.onNext(JSON.toJSONString(customerResponse));
+            return;
+        } else if ("tts_message_end".equalsIgnoreCase(event)) {
             return;
         }
 
-        String content = partialResponse.getAnswer();
-        if (StringUtil.hasText(content)) {
-            handler.onNext(content);
+        if ("agent_thought".equals(event) && position != null) {
+            if (StringUtil.noText(toolInput) && StringUtil.noText(thought)) {
+                // thinking
+                customerResponse = StreamResponse4Customer.builder().event("think").content(StringUtil.noText(content) ? "" : content).build();
+            } else if (StringUtil.hasText(observation)) {
+                // tool called
+                customerResponse = StreamResponse4Customer.builder().event("toolCall")
+                        .toolCall(fromToolCall(toolInput))
+                        .observation(JSON.parseObject(observation).getJSONObject(tool).getString("result")).build();
+            }
+        } else if ("agent_message".equals(event) && StringUtil.hasText(content)) {
+            customerResponse = StreamResponse4Customer.builder().event("answer")
+                    .content(content).build();
+        }
+
+        if (customerResponse != null) {
+            handler.onNext(JSON.toJSONString(customerResponse));
         }
     }
 
@@ -151,5 +181,17 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
             // This is public so it can be extended
             // By default with Lombok it becomes package private
         }
+    }
+
+    public static ToolCallInResponse fromToolCall(String toolInput) {
+        JSONObject jsonObject = JSON.parseObject(toolInput);
+        String name = jsonObject.keySet().iterator().next();
+        JSONObject params = jsonObject.getJSONObject(name);
+
+        ToolCallInResponse toolCall = new ToolCallInResponse();
+        toolCall.setName(name);
+        toolCall.setParams(params);
+
+        return toolCall;
     }
 }

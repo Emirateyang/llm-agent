@@ -153,18 +153,6 @@ public class DefaultDifyClient extends DifyClient {
                 logStreamingResponses
         );
     }
-//
-//    @Override
-//    public SyncOrAsync<EmbeddingResponse> embedding(EmbeddingRequest request) {
-//        return new RequestExecutor<>(openAiApi.embeddings(request, apiVersion), r -> r);
-//    }
-//
-//    @Override
-//    public SyncOrAsync<List<Float>> embedding(String input) {
-//        EmbeddingRequest request = EmbeddingRequest.builder().input(input).build();
-//
-//        return new RequestExecutor<>(openAiApi.embeddings(request, apiVersion), EmbeddingResponse::embedding);
-//    }
 
     private String formatUrl(String endpoint) {
         return baseUrl + endpoint;

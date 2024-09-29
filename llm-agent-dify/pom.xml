@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>llm-agent-dify</artifactId>
+    <version>1.0.0-beta.6</version>
     <description>llm agent components for team who use dify</description>
 
     <properties>
