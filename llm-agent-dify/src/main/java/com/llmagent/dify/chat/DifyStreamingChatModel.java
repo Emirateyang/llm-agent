@@ -148,11 +148,17 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
             if (StringUtil.noText(toolInput) && StringUtil.noText(thought)) {
                 // thinking
                 customerResponse = StreamResponse4Customer.builder().event("think").content(StringUtil.noText(content) ? "" : content).build();
-            } else if (StringUtil.hasText(observation)) {
-                // tool called
-                customerResponse = StreamResponse4Customer.builder().event("toolCall")
-                        .toolCall(fromToolCall(toolInput))
-                        .observation(JSON.parseObject(observation).getJSONObject(tool).getString("result")).build();
+            } else if (StringUtil.hasText(toolInput)) {
+                if (StringUtil.hasText(observation)) {
+                    // tool called
+                    customerResponse = StreamResponse4Customer.builder().event("toolCall")
+                            .toolCall(fromToolCall(toolInput))
+                            .observation(JSON.parseObject(observation).getJSONObject(tool).getString("result")).build();
+                } else {
+                    // calling
+                    customerResponse = StreamResponse4Customer.builder().event("toolCall")
+                            .toolCall(fromToolCall(toolInput)).build();
+                }
             }
         } else if ("agent_message".equals(event) && StringUtil.hasText(content)) {
             customerResponse = StreamResponse4Customer.builder().event("answer")
