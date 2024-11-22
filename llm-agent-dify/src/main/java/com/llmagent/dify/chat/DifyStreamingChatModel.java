@@ -104,7 +104,9 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
         AtomicReference<String> responseId = new AtomicReference<>();
         client.streamingChatCompletion(request)
                 .onPartialResponse(partialResponse -> {
-                    responseBuilder.append(partialResponse);
+                    if (!"message_replace".equalsIgnoreCase(partialResponse.getEvent())) {
+                        responseBuilder.append(partialResponse);
+                    }
                     handle(partialResponse, handler);
 
                     if (!isNullOrBlank(partialResponse.getId())) {
@@ -163,10 +165,14 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
         } else if ("agent_message".equals(event) && StringUtil.hasText(content)) {
             customerResponse = StreamResponse4Customer.builder().event("answer")
                     .content(content).build();
-        } else if ("message_replace".equals(event) && StringUtil.hasText(content)) {
+        } else if ("message".equals(event) && StringUtil.hasText(content)) {
             customerResponse = StreamResponse4Customer.builder().event("answer")
                     .content(content).build();
         }
+//        else if ("message_replace".equals(event) && StringUtil.hasText(content)) {
+//            customerResponse = StreamResponse4Customer.builder().event("answer")
+//                    .content(content).build();
+//        }
 
         if (customerResponse != null) {
             handler.onNext(JSON.toJSONString(customerResponse));
