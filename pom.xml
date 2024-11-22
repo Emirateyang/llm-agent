@@ -12,17 +12,6 @@
     <name>llm-agent</name>
     <description>An LLM Application Framework like LangChain with Java.</description>
 
-    <developers>
-        <developer>
-            <name>Emirate Yang</name>
-            <email>emirate.yang@gmail.com</email>
-            <roles>
-                <role>developer</role>
-            </roles>
-            <timezone>+8</timezone>
-        </developer>
-    </developers>
-
     <modules>
         <module>llm-agent-core</module>
         <module>llm-agent-vector</module>
@@ -50,6 +39,34 @@
         <jtokkit.version>1.0.0</jtokkit.version>
         <gson.version>2.11.0</gson.version>
     </properties>
+
+    <url>https://github.com/Emirateyang/llm-agent</url>
+
+    <developers>
+        <developer>
+            <id>Yang</id>
+            <name>Yuxuan</name>
+            <email>emirate.yang@gmail.com</email>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>+8</timezone>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>https://github.com/Emirateyang/llm-agent.git</connection>
+        <developerConnection>scm:git@github.com:Emirateyang/llm-agent.git</developerConnection>
+        <url>https://github.com/Emirateyang/llm-agent/tree/main</url>
+    </scm>
 
     <dependencyManagement>
         <dependencies>
@@ -103,6 +120,35 @@
                             <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <keyname>B9D1EDADBA577E39</keyname>
+                            <passphraseServerId>gpg</passphraseServerId>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.5.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>mavenCentral</publishingServerId>
                 </configuration>
             </plugin>
         </plugins>
