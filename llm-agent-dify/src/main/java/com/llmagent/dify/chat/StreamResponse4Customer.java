@@ -10,6 +10,8 @@ public class StreamResponse4Customer {
     private ToolCallInResponse toolCall;
     private String observation;
 
+    private String conversationId;
+
     private StreamResponse4Customer(StreamResponse4Customer.Builder builder) {
         this.event = builder.event;
         this.content = builder.content;
@@ -54,5 +56,13 @@ public class StreamResponse4Customer {
         public StreamResponse4Customer build() {
             return new StreamResponse4Customer(this);
         }
+    }
+
+    public String getConversationId() {
+        return conversationId;
+    }
+
+    public void setConversationId(String conversationId) {
+        this.conversationId = conversationId;
     }
 }

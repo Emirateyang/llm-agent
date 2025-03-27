@@ -140,6 +140,7 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
         StreamResponse4Customer customerResponse = null;
         if ("message_end".equalsIgnoreCase(event)) {
             customerResponse = StreamResponse4Customer.builder().event("done").build();
+            customerResponse.setConversationId(partialResponse.getConversationId());
             handler.onNext(JSON.toJSONString(customerResponse));
             return;
         } else if ("tts_message_end".equalsIgnoreCase(event)) {
