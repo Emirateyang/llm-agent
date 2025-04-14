@@ -393,6 +393,11 @@ public class PgVectorStore implements EmbeddingStore<TextSegment> {
         }
     }
 
+    @Override
+    public void addAll(
+            List<String> ids, List<VectorData> embeddings, List<TextSegment> embedded) {
+        addAllImplement(ids, embeddings, embedded);
+    }
 
 
     protected Connection getConnection() throws SQLException {

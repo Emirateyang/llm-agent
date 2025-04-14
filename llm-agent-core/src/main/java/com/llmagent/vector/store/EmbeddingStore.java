@@ -52,6 +52,17 @@ public interface EmbeddingStore<T> {
     List<String> addAll(List<VectorData> embeddings, List<T> T);
 
     /**
+     * Adds multiple embeddings and their corresponding contents that have been embedded to the store.
+     *
+     * @param ids        A list of IDs associated with the added embeddings.
+     * @param embeddings A list of embeddings to be added to the store.
+     * @param T   A list of original contents that were T.
+     */
+    default void addAll(List<String> ids, List<VectorData> embeddings, List<T> T) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
      * Removes a single embedding from the store by ID.
      *
      * @param id The unique ID of the embedding to be removed.
