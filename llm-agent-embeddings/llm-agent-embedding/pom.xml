@@ -6,7 +6,7 @@
     <parent>
         <groupId>fun.krinsiman.llm</groupId>
         <artifactId>llm-agent-embeddings</artifactId>
-        <version>1.0.0-beta.6</version>
+        <version>1.0.0-beta.7</version>
     </parent>
 
     <artifactId>llm-agent-embedding</artifactId>
@@ -20,12 +20,12 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>com.microsoft.onnxruntime</groupId>
-            <artifactId>onnxruntime</artifactId>
-            <version>${onnxruntime.version}</version>
-            <classifier>sources</classifier>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.microsoft.onnxruntime</groupId>-->
+<!--            <artifactId>onnxruntime</artifactId>-->
+<!--            <version>${onnxruntime.version}</version>-->
+<!--            <classifier>sources</classifier>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.microsoft.onnxruntime</groupId>
             <artifactId>onnxruntime</artifactId>
