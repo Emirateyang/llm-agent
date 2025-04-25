@@ -5,7 +5,6 @@ import com.azure.ai.openai.models.*;
 import com.azure.core.credential.AzureKeyCredential;
 import com.azure.core.credential.KeyCredential;
 import com.azure.core.credential.TokenCredential;
-import com.azure.core.exception.HttpResponseException;
 import com.azure.core.http.HttpClient;
 import com.azure.core.http.ProxyOptions;
 import com.azure.core.http.netty.NettyAsyncHttpClientProvider;
@@ -16,9 +15,16 @@ import com.azure.core.http.policy.RetryOptions;
 import com.azure.core.util.BinaryData;
 import com.azure.core.util.Header;
 import com.azure.core.util.HttpClientOptions;
+import com.llmagent.data.image.Image;
 import com.llmagent.data.message.*;
-import com.llmagent.llm.chat.listener.ChatModelRequest;
-import com.llmagent.llm.chat.listener.ChatModelResponse;
+import com.llmagent.llm.chat.request.ChatRequest;
+import com.llmagent.llm.chat.request.ChatRequestParameters;
+import com.llmagent.llm.chat.request.json.JsonObjectSchema;
+import com.llmagent.llm.chat.request.json.JsonSchema;
+import com.llmagent.llm.chat.response.ChatResponse;
+import com.llmagent.llm.chat.response.ChatResponseMetadata;
+import com.llmagent.llm.chat.response.ResponseFormat;
+import com.llmagent.llm.chat.response.ResponseFormatType;
 import com.llmagent.llm.output.FinishReason;
 import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.llm.output.TokenUsage;
@@ -28,12 +34,17 @@ import com.llmagent.llm.tool.ToolSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.*;
 
 import static com.llmagent.data.message.AiMessage.aiMessage;
+import static com.llmagent.llm.chat.request.json.JsonSchemaElementHelper.toMap;
 import static com.llmagent.llm.output.FinishReason.*;
 import static com.llmagent.util.ObjectUtil.getOrDefault;
+import static com.llmagent.util.ObjectUtil.isNullOrEmpty;
+import static com.llmagent.util.StringUtil.isNullOrBlank;
 import static com.llmagent.util.ValidationUtil.ensureNotBlank;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
@@ -43,17 +54,17 @@ public class AzureAiHelper {
 
     public static final String DEFAULT_USER_AGENT = "langchain4j-azure-openai";
 
-    public static OpenAIClient setupSyncClient(String endpoint, String serviceVersion, Object credential, Duration timeout, Integer maxRetries, ProxyOptions proxyOptions, boolean logRequestsAndResponses, String userAgentSuffix) {
-        OpenAIClientBuilder openAIClientBuilder = setupOpenAIClientBuilder(endpoint, serviceVersion, credential, timeout, maxRetries, proxyOptions, logRequestsAndResponses, userAgentSuffix);
+    public static OpenAIClient setupSyncClient(String endpoint, String serviceVersion, Object credential, Duration timeout, Integer maxRetries, ProxyOptions proxyOptions, boolean logRequestsAndResponses, String userAgentSuffix, Map<String, String> customHeaders) {
+        OpenAIClientBuilder openAIClientBuilder = setupOpenAIClientBuilder(endpoint, serviceVersion, credential, timeout, maxRetries, proxyOptions, logRequestsAndResponses, userAgentSuffix, customHeaders);
         return openAIClientBuilder.buildClient();
     }
 
-    public static OpenAIAsyncClient setupAsyncClient(String endpoint, String serviceVersion, Object credential, Duration timeout, Integer maxRetries, ProxyOptions proxyOptions, boolean logRequestsAndResponses, String userAgentSuffix) {
-        OpenAIClientBuilder openAIClientBuilder = setupOpenAIClientBuilder(endpoint, serviceVersion, credential, timeout, maxRetries, proxyOptions, logRequestsAndResponses, userAgentSuffix);
+    public static OpenAIAsyncClient setupAsyncClient(String endpoint, String serviceVersion, Object credential, Duration timeout, Integer maxRetries, ProxyOptions proxyOptions, boolean logRequestsAndResponses, String userAgentSuffix, Map<String, String> customHeaders) {
+        OpenAIClientBuilder openAIClientBuilder = setupOpenAIClientBuilder(endpoint, serviceVersion, credential, timeout, maxRetries, proxyOptions, logRequestsAndResponses, userAgentSuffix, customHeaders);
         return openAIClientBuilder.buildAsyncClient();
     }
 
-    private static OpenAIClientBuilder setupOpenAIClientBuilder(String endpoint, String serviceVersion, Object credential, Duration timeout, Integer maxRetries, ProxyOptions proxyOptions, boolean logRequestsAndResponses, String userAgentSuffix) {
+    private static OpenAIClientBuilder setupOpenAIClientBuilder(String endpoint, String serviceVersion, Object credential, Duration timeout, Integer maxRetries, ProxyOptions proxyOptions, boolean logRequestsAndResponses, String userAgentSuffix, Map<String, String> customHeaders) {
         timeout = getOrDefault(timeout, ofSeconds(60));
         HttpClientOptions clientOptions = new HttpClientOptions();
         clientOptions.setConnectTimeout(timeout);
@@ -63,11 +74,15 @@ public class AzureAiHelper {
         clientOptions.setProxyOptions(proxyOptions);
 
         String userAgent = DEFAULT_USER_AGENT;
-        if (userAgentSuffix!=null && !userAgentSuffix.isEmpty()) {
+        if (userAgentSuffix != null && !userAgentSuffix.isEmpty()) {
             userAgent = DEFAULT_USER_AGENT + "-" + userAgentSuffix;
         }
-        Header header = new Header("User-Agent", userAgent);
-        clientOptions.setHeaders(Collections.singletonList(header));
+        List<Header> headers = new ArrayList<>();
+        headers.add(new Header("User-Agent", userAgent));
+        if (customHeaders != null) {
+            customHeaders.forEach((name, value) -> headers.add(new Header(name, value)));
+        }
+        clientOptions.setHeaders(headers);
         HttpClient httpClient = new NettyAsyncHttpClientProvider().createInstance(clientOptions);
 
         HttpLogOptions httpLogOptions = new HttpLogOptions();
@@ -75,7 +90,7 @@ public class AzureAiHelper {
             httpLogOptions.setLogLevel(HttpLogDetailLevel.BODY_AND_HEADERS);
         }
 
-        maxRetries = getOrDefault(maxRetries, 3);
+        maxRetries = getOrDefault(maxRetries, 2);
         ExponentialBackoffOptions exponentialBackoffOptions = new ExponentialBackoffOptions();
         exponentialBackoffOptions.setMaxRetries(maxRetries);
         RetryOptions retryOptions = new RetryOptions(exponentialBackoffOptions);
@@ -198,16 +213,20 @@ public class AzureAiHelper {
     }
 
     private static ChatCompletionsToolDefinition toToolDefinition(ToolSpecification toolSpecification) {
-        FunctionDefinition functionDefinition = new FunctionDefinition(toolSpecification.name());
+        ChatCompletionsFunctionToolDefinitionFunction functionDefinition = new ChatCompletionsFunctionToolDefinitionFunction(toolSpecification.name());
         functionDefinition.setDescription(toolSpecification.description());
-        functionDefinition.setParameters(toOpenAiParameters(toolSpecification.parameters()));
+        functionDefinition.setParameters(getParameters(toolSpecification));
         return new ChatCompletionsFunctionToolDefinition(functionDefinition);
     }
 
-    public static BinaryData toToolChoice(ToolSpecification toolThatMustBeExecuted) {
-        FunctionCall functionCall = new FunctionCall(toolThatMustBeExecuted.name(), toOpenAiParameters(toolThatMustBeExecuted.parameters()).toString());
+    public static ChatCompletionsToolSelection toToolChoice(ToolSpecification toolThatMustBeExecuted) {
+        FunctionCall functionCall = new FunctionCall(toolThatMustBeExecuted.name(), getParameters(toolThatMustBeExecuted).toString());
         ChatCompletionsToolCall toolToCall = new ChatCompletionsFunctionToolCall(toolThatMustBeExecuted.name(), functionCall);
-        return BinaryData.fromObject(toolToCall);
+        return ChatCompletionsToolSelection.fromBinaryData(BinaryData.fromObject(toolToCall));
+    }
+
+    private static BinaryData getParameters(ToolSpecification toolSpecification) {
+        return toOpenAiParameters(toolSpecification.parameters());
     }
 
     private static final Map<String, Object> NO_PARAMETER_DATA = new HashMap<>();
@@ -257,10 +276,12 @@ public class AzureAiHelper {
     }
 
     public static AiMessage aiMessageFrom(ChatResponseMessage chatResponseMessage) {
-        if (chatResponseMessage.getToolCalls() == null || chatResponseMessage.getToolCalls().isEmpty()) {
-            return aiMessage(chatResponseMessage.getContent());
+        String text = chatResponseMessage.getContent();
+
+        if (isNullOrEmpty(chatResponseMessage.getToolCalls())) {
+            return aiMessage(text);
         } else {
-            List<ToolRequest> toolExecutionRequests = chatResponseMessage.getToolCalls()
+            List<ToolRequest> toolRequests = chatResponseMessage.getToolCalls()
                     .stream()
                     .filter(toolCall -> toolCall instanceof ChatCompletionsFunctionToolCall)
                     .map(toolCall -> (ChatCompletionsFunctionToolCall) toolCall)
@@ -272,8 +293,30 @@ public class AzureAiHelper {
                                     .build())
                     .collect(toList());
 
-            return aiMessage(toolExecutionRequests);
+            return isNullOrBlank(text) ?
+                    aiMessage(toolRequests) :
+                    aiMessage(text, toolRequests);
         }
+    }
+
+    public static Image imageFrom(ImageGenerationData imageGenerationData) {
+        Image.Builder imageBuilder = Image.builder()
+                .revisedPrompt(imageGenerationData.getRevisedPrompt());
+
+        String urlString = imageGenerationData.getUrl();
+        String imageData = imageGenerationData.getBase64Data();
+        if (urlString != null) {
+            try {
+                URI uri = new URI(urlString);
+                imageBuilder.url(uri);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (imageData != null) {
+            imageBuilder.base64Data(imageData);
+        }
+
+        return imageBuilder.build();
     }
 
     public static TokenUsage tokenUsageFrom(CompletionsUsage openAiUsage) {
@@ -303,59 +346,58 @@ public class AzureAiHelper {
         }
     }
 
-    /**
-     * Support for Responsible AI (content filtered by Azure OpenAI for violence, self harm, or hate).
-     */
-    public static FinishReason contentFilterManagement(HttpResponseException httpResponseException, String contentFilterCode) {
-        FinishReason exceptionFinishReason = FinishReason.OTHER;
-        if (httpResponseException.getValue() instanceof Map) {
-            try {
-                Map<String, Object> error = (Map<String, Object>) httpResponseException.getValue();
-                Object errorMap = error.get("error");
-                if (errorMap instanceof Map) {
-                    Map<String, Object> errorDetails = (Map<String, Object>) errorMap;
-                    Object errorCode = errorDetails.get("code");
-                    if (errorCode instanceof String) {
-                        String code = (String) errorCode;
-                        if (contentFilterCode.equals(code)) {
-                            // The content was filtered by Azure OpenAI's content filter (for violence, self harm, or hate).
-                            exceptionFinishReason = CONTENT_FILTER;
-                        }
-                    }
-                }
-            } catch (ClassCastException classCastException) {
-                logger.error("Error parsing error response from Azure OpenAI", classCastException);
-            }
-        }
-        return exceptionFinishReason;
-    }
-
-    public static ChatModelRequest createModelListenerRequest(ChatCompletionsOptions options,
-                                                       List<ChatMessage> messages,
-                                                       List<ToolSpecification> toolSpecifications) {
-        return ChatModelRequest.builder()
-                .model(options.getModel())
-                .temperature(options.getTemperature())
-                .topP(options.getTopP())
-                .maxTokens(options.getMaxTokens())
-                .messages(messages)
-                .toolSpecifications(toolSpecifications)
-                .build();
-    }
-
-    public static ChatModelResponse createModelListenerResponse(String responseId,
-                                                         String responseModel,
-                                                         LlmResponse<AiMessage> response) {
+    public static ChatResponse createListenerResponse(String responseId,
+                                               String responseModel,
+                                               LlmResponse<AiMessage> response) {
         if (response == null) {
             return null;
         }
 
-        return ChatModelResponse.builder()
-                .id(responseId)
-                .model(responseModel)
-                .tokenUsage(response.tokenUsage())
-                .finishReason(response.finishReason())
+        return ChatResponse.builder()
                 .aiMessage(response.content())
+                .metadata(ChatResponseMetadata.builder()
+                        .id(responseId)
+                        .modelName(responseModel)
+                        .tokenUsage(response.tokenUsage())
+                        .finishReason(response.finishReason())
+                        .build())
+                .build();
+    }
+
+    public static ChatCompletionsResponseFormat toAzureOpenAiResponseFormat(ResponseFormat responseFormat, boolean strict) {
+        if (responseFormat == null || responseFormat.type() == ResponseFormatType.TEXT) {
+            return new ChatCompletionsTextResponseFormat();
+        } else if (responseFormat.type() != ResponseFormatType.JSON) {
+            throw new IllegalArgumentException("Unsupported response format: " + responseFormat);
+        }
+
+        JsonSchema jsonSchema = responseFormat.jsonSchema();
+        if (jsonSchema == null) {
+            return new ChatCompletionsJsonResponseFormat();
+        } else {
+            if (!(jsonSchema.rootElement() instanceof JsonObjectSchema)) {
+                throw new IllegalArgumentException("For Azure OpenAI, the root element of the JSON Schema must be a JsonObjectSchema, but it was: " + jsonSchema.rootElement().getClass());
+            }
+            ChatCompletionsJsonSchemaResponseFormatJsonSchema schema = new ChatCompletionsJsonSchemaResponseFormatJsonSchema(jsonSchema.name());
+            schema.setStrict(strict);
+            Map<String, Object> schemaMap = toMap(jsonSchema.rootElement(), strict);
+            schema.setSchema(BinaryData.fromObject(schemaMap));
+            return new ChatCompletionsJsonSchemaResponseFormat(schema);
+        }
+    }
+
+    public static ChatRequest createListenerRequest(ChatCompletionsOptions options,
+                                             List<ChatMessage> messages,
+                                             List<ToolSpecification> toolSpecifications) {
+        return ChatRequest.builder()
+                .messages(messages)
+                .parameters(ChatRequestParameters.builder()
+                        .modelName(options.getModel())
+                        .temperature(options.getTemperature())
+                        .topP(options.getTopP())
+                        .maxOutputTokens(options.getMaxTokens())
+                        .toolSpecifications(toolSpecifications)
+                        .build())
                 .build();
     }
 }
