@@ -1,5 +1,6 @@
 package com.llmagent.openai.chat;
 
+import com.llmagent.openai.token.StreamOptions;
 import com.llmagent.openai.tool.Tool;
 import com.llmagent.openai.tool.ToolChoice;
 import com.llmagent.openai.tool.ToolChoiceMode;
@@ -8,6 +9,8 @@ import com.llmagent.openai.ResponseFormatType;
 
 import java.util.*;
 
+import static java.util.Collections.unmodifiableMap;
+
 public final class ChatCompletionRequest {
     private final String model;
     private final List<Message> messages;
@@ -15,8 +18,10 @@ public final class ChatCompletionRequest {
     private final Double topP;
     private final Integer n;
     private final Boolean stream;
+    private final StreamOptions streamOptions;
     private final List<String> stop;
     private final Integer maxTokens;
+    private final Integer maxCompletionTokens;
     private final Double presencePenalty;
     private final Double frequencyPenalty;
     private final Map<String, Integer> logitBias;
@@ -25,6 +30,11 @@ public final class ChatCompletionRequest {
     private final Integer seed;
     private final List<Tool> tools;
     private final Object toolChoice;
+    private final Boolean parallelToolCalls;
+    private final Boolean store;
+    private final Map<String, String> metadata;
+    private final String reasoningEffort;
+    private final String serviceTier;
 
     private ChatCompletionRequest(Builder builder) {
         this.model = builder.model;
@@ -33,8 +43,10 @@ public final class ChatCompletionRequest {
         this.topP = builder.topP;
         this.n = builder.n;
         this.stream = builder.stream;
+        this.streamOptions = builder.streamOptions;
         this.stop = builder.stop;
         this.maxTokens = builder.maxTokens;
+        this.maxCompletionTokens = builder.maxCompletionTokens;
         this.presencePenalty = builder.presencePenalty;
         this.frequencyPenalty = builder.frequencyPenalty;
         this.logitBias = builder.logitBias;
@@ -43,6 +55,11 @@ public final class ChatCompletionRequest {
         this.seed = builder.seed;
         this.tools = builder.tools;
         this.toolChoice = builder.toolChoice;
+        this.parallelToolCalls = builder.parallelToolCalls;
+        this.store = builder.store;
+        this.metadata = builder.metadata;
+        this.reasoningEffort = builder.reasoningEffort;
+        this.serviceTier = builder.serviceTier;
     }
 
     public String model() {
@@ -69,12 +86,20 @@ public final class ChatCompletionRequest {
         return stream;
     }
 
+    public StreamOptions streamOptions() {
+        return streamOptions;
+    }
+
     public List<String> stop() {
         return stop;
     }
 
     public Integer maxTokens() {
         return maxTokens;
+    }
+
+    public Integer maxCompletionTokens() {
+        return maxCompletionTokens;
     }
 
     public Double presencePenalty() {
@@ -109,6 +134,26 @@ public final class ChatCompletionRequest {
         return toolChoice;
     }
 
+    public Boolean parallelToolCalls() {
+        return parallelToolCalls;
+    }
+
+    public Boolean store() {
+        return store;
+    }
+
+    public Map<String, String> metadata() {
+        return metadata;
+    }
+
+    public String reasoningEffort() {
+        return reasoningEffort;
+    }
+
+    public String serviceTier() {
+        return serviceTier;
+    }
+
     @Override
     public boolean equals(Object another) {
         if (this == another) return true;
@@ -123,8 +168,10 @@ public final class ChatCompletionRequest {
                 && Objects.equals(topP, another.topP)
                 && Objects.equals(n, another.n)
                 && Objects.equals(stream, another.stream)
+                && Objects.equals(streamOptions, another.streamOptions)
                 && Objects.equals(stop, another.stop)
                 && Objects.equals(maxTokens, another.maxTokens)
+                && Objects.equals(maxCompletionTokens, another.maxCompletionTokens)
                 && Objects.equals(presencePenalty, another.presencePenalty)
                 && Objects.equals(frequencyPenalty, another.frequencyPenalty)
                 && Objects.equals(logitBias, another.logitBias)
@@ -132,7 +179,12 @@ public final class ChatCompletionRequest {
                 && Objects.equals(responseFormat, another.responseFormat)
                 && Objects.equals(seed, another.seed)
                 && Objects.equals(tools, another.tools)
-                && Objects.equals(toolChoice, another.toolChoice);
+                && Objects.equals(toolChoice, another.toolChoice)
+                && Objects.equals(parallelToolCalls, another.parallelToolCalls)
+                && Objects.equals(store, another.store)
+                && Objects.equals(metadata, another.metadata)
+                && Objects.equals(reasoningEffort, another.reasoningEffort)
+                && Objects.equals(serviceTier, another.serviceTier);
     }
 
     @Override
@@ -144,8 +196,10 @@ public final class ChatCompletionRequest {
         h += (h << 5) + Objects.hashCode(topP);
         h += (h << 5) + Objects.hashCode(n);
         h += (h << 5) + Objects.hashCode(stream);
+        h += (h << 5) + Objects.hashCode(streamOptions);
         h += (h << 5) + Objects.hashCode(stop);
         h += (h << 5) + Objects.hashCode(maxTokens);
+        h += (h << 5) + Objects.hashCode(maxCompletionTokens);
         h += (h << 5) + Objects.hashCode(presencePenalty);
         h += (h << 5) + Objects.hashCode(frequencyPenalty);
         h += (h << 5) + Objects.hashCode(logitBias);
@@ -153,7 +207,12 @@ public final class ChatCompletionRequest {
         h += (h << 5) + Objects.hashCode(responseFormat);
         h += (h << 5) + Objects.hashCode(seed);
         h += (h << 5) + Objects.hashCode(tools);
-        h += (h << 5) + Objects.hashCode(toolChoice);;
+        h += (h << 5) + Objects.hashCode(toolChoice);
+        h += (h << 5) + Objects.hashCode(parallelToolCalls);
+        h += (h << 5) + Objects.hashCode(store);
+        h += (h << 5) + Objects.hashCode(metadata);
+        h += (h << 5) + Objects.hashCode(reasoningEffort);
+        h += (h << 5) + Objects.hashCode(serviceTier);
         return h;
     }
 
@@ -166,8 +225,10 @@ public final class ChatCompletionRequest {
                 + ", topP=" + topP
                 + ", n=" + n
                 + ", stream=" + stream
+                + ", streamOptions=" + streamOptions
                 + ", stop=" + stop
                 + ", maxTokens=" + maxTokens
+                + ", maxCompletionTokens=" + maxCompletionTokens
                 + ", presencePenalty=" + presencePenalty
                 + ", frequencyPenalty=" + frequencyPenalty
                 + ", logitBias=" + logitBias
@@ -176,6 +237,11 @@ public final class ChatCompletionRequest {
                 + ", seed=" + seed
                 + ", tools=" + tools
                 + ", toolChoice=" + toolChoice
+                + ", parallelToolCalls=" + parallelToolCalls
+                + ", store=" + store
+                + ", metadata=" + metadata
+                + ", reasoningEffort=" + reasoningEffort
+                + ", serviceTier=" + serviceTier
                 + "}";
     }
 
@@ -185,14 +251,16 @@ public final class ChatCompletionRequest {
 
     public static final class Builder {
 
-        private String model = ChatCompletionModel.GPT_3_5_TURBO.toString();
+        private String model = ChatLanguageModelName.GPT_3_5_TURBO.toString();
         private List<Message> messages;
         private Double temperature;
         private Double topP;
         private Integer n;
         private Boolean stream;
+        private StreamOptions streamOptions;
         private List<String> stop;
         private Integer maxTokens;
+        private Integer maxCompletionTokens;
         private Double presencePenalty;
         private Double frequencyPenalty;
         private Map<String, Integer> logitBias;
@@ -201,6 +269,11 @@ public final class ChatCompletionRequest {
         private Integer seed;
         private List<Tool> tools;
         private Object toolChoice;
+        private Boolean parallelToolCalls;
+        private Boolean store;
+        private Map<String, String> metadata;
+        private String reasoningEffort;
+        private String serviceTier;
 
         private Builder() {
         }
@@ -212,8 +285,10 @@ public final class ChatCompletionRequest {
             topP(instance.topP);
             n(instance.n);
             stream(instance.stream);
+            streamOptions(instance.streamOptions);
             stop(instance.stop);
             maxTokens(instance.maxTokens);
+            maxCompletionTokens(instance.maxCompletionTokens);
             presencePenalty(instance.presencePenalty);
             frequencyPenalty(instance.frequencyPenalty);
             logitBias(instance.logitBias);
@@ -222,10 +297,15 @@ public final class ChatCompletionRequest {
             seed(instance.seed);
             tools(instance.tools);
             toolChoice(instance.toolChoice);
+            parallelToolCalls(instance.parallelToolCalls);
+            store(instance.store);
+            metadata(instance.metadata);
+            reasoningEffort(instance.reasoningEffort);
+            serviceTier(instance.serviceTier);
             return this;
         }
 
-        public Builder model(ChatCompletionModel model) {
+        public Builder model(ChatLanguageModelName model) {
             return model(model.toString());
         }
 
@@ -297,6 +377,11 @@ public final class ChatCompletionRequest {
             return this;
         }
 
+        public Builder streamOptions(StreamOptions streamOptions) {
+            this.streamOptions = streamOptions;
+            return this;
+        }
+
         public Builder stop(List<String> stop) {
             if (stop != null) {
                 this.stop = Collections.unmodifiableList(stop);
@@ -313,6 +398,11 @@ public final class ChatCompletionRequest {
             return this;
         }
 
+        public Builder maxCompletionTokens(Integer maxCompletionTokens) {
+            this.maxCompletionTokens = maxCompletionTokens;
+            return this;
+        }
+
         public Builder presencePenalty(Double presencePenalty) {
             this.presencePenalty = presencePenalty;
             return this;
@@ -325,7 +415,7 @@ public final class ChatCompletionRequest {
 
         public Builder logitBias(Map<String, Integer> logitBias) {
             if (logitBias != null) {
-                this.logitBias = Collections.unmodifiableMap(logitBias);
+                this.logitBias = unmodifiableMap(logitBias);
             }
             return this;
         }
@@ -337,14 +427,8 @@ public final class ChatCompletionRequest {
 
         public Builder responseFormat(ResponseFormatType responseFormatType) {
             if (responseFormatType != null) {
-                responseFormat = new ResponseFormat(responseFormatType);
-            }
-            return this;
-        }
-
-        public Builder responseFormat(String responseFormatType) {
-            if (responseFormatType != null) {
-                responseFormat = new ResponseFormat(responseFormatType);
+                responseFormat = ResponseFormat.builder()
+                        .type(responseFormatType).build();
             }
             return this;
         }
@@ -381,6 +465,33 @@ public final class ChatCompletionRequest {
 
         public Builder toolChoice(Object toolChoice) {
             this.toolChoice = toolChoice;
+            return this;
+        }
+
+        public Builder parallelToolCalls(Boolean parallelToolCalls) {
+            this.parallelToolCalls = parallelToolCalls;
+            return this;
+        }
+
+        public Builder store(Boolean store) {
+            this.store = store;
+            return this;
+        }
+
+        public Builder metadata(Map<String, String> metadata) {
+            if (metadata != null) {
+                this.metadata = unmodifiableMap(metadata);
+            }
+            return this;
+        }
+
+        public Builder reasoningEffort(String reasoningEffort) {
+            this.reasoningEffort = reasoningEffort;
+            return this;
+        }
+
+        public Builder serviceTier(String serviceTier) {
+            this.serviceTier = serviceTier;
             return this;
         }
 

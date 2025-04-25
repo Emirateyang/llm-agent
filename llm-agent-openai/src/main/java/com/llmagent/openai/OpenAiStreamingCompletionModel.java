@@ -1,33 +1,27 @@
 package com.llmagent.openai;
 
-import com.llmagent.data.message.AiMessage;
-import com.llmagent.data.message.ChatMessage;
 import com.llmagent.llm.StreamingResponseHandler;
-import com.llmagent.llm.Tokenizer;
-import com.llmagent.llm.chat.TokenCountEstimator;
-import com.llmagent.llm.chat.listener.*;
+import com.llmagent.llm.chat.response.ChatResponse;
 import com.llmagent.llm.completion.StreamingCompletionModel;
 import com.llmagent.llm.output.LlmResponse;
-import com.llmagent.openai.chat.*;
 import com.llmagent.openai.client.OpenAiClient;
 import com.llmagent.openai.completion.CompletionChoice;
+import com.llmagent.openai.completion.CompletionModelName;
 import com.llmagent.openai.completion.CompletionRequest;
-import com.llmagent.util.StringUtil;
+import com.llmagent.openai.token.StreamOptions;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.Proxy;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import static com.llmagent.openai.OpenAiHelper.*;
-import static com.llmagent.openai.chat.ChatCompletionModel.GPT_3_5_TURBO;
+import static com.llmagent.openai.chat.ChatLanguageModelName.GPT_3_5_TURBO;
 import static com.llmagent.util.ObjectUtil.getOrDefault;
+import static com.llmagent.util.ObjectUtil.isNotNullOrEmpty;
 import static com.llmagent.util.ServiceHelper.loadFactories;
 import static java.time.Duration.ofSeconds;
-import static java.util.Collections.emptyList;
 
 /**
  * Represents an OpenAI language model with a completion interface, such as gpt-3.5-turbo-instruct.
@@ -36,77 +30,32 @@ import static java.util.Collections.emptyList;
  * as it offers more advanced features like function calling, multi-turn conversations, etc.
  */
 @Slf4j
-public class OpenAiStreamingCompletionModel implements StreamingCompletionModel, TokenCountEstimator {
+public class OpenAiStreamingCompletionModel implements StreamingCompletionModel {
 
     private final OpenAiClient client;
     private final String modelName;
     private final Double temperature;
-    private final Double topP;
-    private final List<String> stop;
-    private final Integer maxTokens;
-    private final Double presencePenalty;
-    private final Double frequencyPenalty;
-    private final Map<String, Integer> logitBias;
-    private final String responseFormat;
-    private final Integer seed;
-    private final String user;
-    private final Tokenizer tokenizer;
-    private final boolean isOpenAiModel;
-    private final List<ChatModelListener> listeners;
 
     @Builder
-    public OpenAiStreamingCompletionModel(String baseUrl,
-                                          String apiKey,
-                                          String organizationId,
-                                          String modelName,
-                                          Double temperature,
-                                          Double topP,
-                                          List<String> stop,
-                                          Integer maxTokens,
-                                          Double presencePenalty,
-                                          Double frequencyPenalty,
-                                          Map<String, Integer> logitBias,
-                                          String responseFormat,
-                                          Integer seed,
-                                          String user,
-                                          Duration timeout,
-                                          Proxy proxy,
-                                          Boolean logRequests,
-                                          Boolean logResponses,
-                                          Tokenizer tokenizer,
-                                          Map<String, String> customHeaders,
-                                          List<ChatModelListener> listeners) {
-
-        timeout = getOrDefault(timeout, ofSeconds(60));
+    public OpenAiStreamingCompletionModel(OpenAiStreamingCompletionModelBuilder builder) {
 
         this.client = OpenAiClient.builder()
-                .baseUrl(getOrDefault(baseUrl, OPENAI_URL))
-                .openAiApiKey(apiKey)
-                .organizationId(organizationId)
-                .callTimeout(timeout)
-                .connectTimeout(timeout)
-                .readTimeout(timeout)
-                .writeTimeout(timeout)
-                .proxy(proxy)
-                .logRequests(logRequests)
-                .logStreamingResponses(logResponses)
+                .baseUrl(getOrDefault(builder.baseUrl, OPENAI_URL))
+                .openAiApiKey(builder.apiKey)
+                .organizationId(builder.organizationId)
+                .projectId(builder.projectId)
+                .callTimeout(getOrDefault(builder.timeout, ofSeconds(30)))
+                .connectTimeout(getOrDefault(builder.timeout, ofSeconds(15)))
+                .readTimeout(getOrDefault(builder.timeout, ofSeconds(60)))
+                .writeTimeout(getOrDefault(builder.timeout, ofSeconds(60)))
+                .proxy(builder.proxy)
+                .logRequests(builder.logRequests)
+                .logStreamingResponses(builder.logResponses)
                 .userAgent(DEFAULT_USER_AGENT)
-                .customHeaders(customHeaders)
+                .customHeaders(builder.customHeaders)
                 .build();
-        this.modelName = getOrDefault(modelName, GPT_3_5_TURBO.toString());
-        this.temperature = getOrDefault(temperature, 0.7);
-        this.topP = topP;
-        this.stop = stop;
-        this.maxTokens = maxTokens;
-        this.presencePenalty = presencePenalty;
-        this.frequencyPenalty = frequencyPenalty;
-        this.logitBias = logitBias;
-        this.responseFormat = responseFormat;
-        this.seed = seed;
-        this.user = user;
-        this.tokenizer = getOrDefault(tokenizer, OpenAiTokenizer::new);
-        this.isOpenAiModel = isOpenAiModel(this.modelName);
-        this.listeners = listeners == null ? emptyList() : new ArrayList<>(listeners);
+        this.modelName = getOrDefault(builder.modelName, GPT_3_5_TURBO.toString());
+        this.temperature = getOrDefault(builder.temperature, 0.7);
     }
 
     public String modelName() {
@@ -114,47 +63,40 @@ public class OpenAiStreamingCompletionModel implements StreamingCompletionModel,
     }
 
     @Override
-    public void generate(String prompt, StreamingResponseHandler<AiMessage> handler) {
+    public void generate(String prompt, StreamingResponseHandler<String> handler) {
 
         CompletionRequest request = CompletionRequest.builder()
                 .stream(true)
+                .streamOptions(StreamOptions.builder()
+                        .includeUsage(true)
+                        .build())
                 .model(modelName)
                 .prompt(prompt)
                 .temperature(temperature)
                 .build();
 
-        int inputTokenCount = countInputTokens(prompt);
-        OpenAiStreamingResponseBuilder responseBuilder = new OpenAiStreamingResponseBuilder(inputTokenCount);
+        OpenAiStreamingResponseBuilder responseBuilder = new OpenAiStreamingResponseBuilder();
 
         client.completion(request)
                 .onPartialResponse(partialResponse -> {
                     responseBuilder.append(partialResponse);
                     for (CompletionChoice choice : partialResponse.choices()) {
                         String token = choice.text();
-                        if (StringUtil.hasText(token)) {
+                        if (isNotNullOrEmpty(token)) {
                             handler.onNext(token);
                         }
                     }
                 })
                 .onComplete(() -> {
-                    LlmResponse<AiMessage> response = responseBuilder.build(tokenizer, false);
-                    handler.onComplete(response);
+                    ChatResponse chatResponse = responseBuilder.build();
+                    handler.onComplete(LlmResponse.from(
+                            chatResponse.aiMessage().content(),
+                            chatResponse.metadata().tokenUsage(),
+                            chatResponse.metadata().finishReason()
+                    ));
                 })
                 .onError(handler::onError)
                 .execute();
-    }
-
-    private int countInputTokens(String prompt) {
-        return tokenizer.estimateTokenCountInText(prompt);
-    }
-
-    @Override
-    public int estimateTokenCount(List<ChatMessage> messages) {
-        return tokenizer.estimateTokenCountInMessages(messages);
-    }
-
-    public static OpenAiStreamingCompletionModel withApiKey(String apiKey) {
-        return builder().apiKey(apiKey).build();
     }
 
     public static OpenAiStreamingCompletionModelBuilder builder() {
@@ -166,9 +108,21 @@ public class OpenAiStreamingCompletionModel implements StreamingCompletionModel,
 
     public static class OpenAiStreamingCompletionModelBuilder {
 
+        private String baseUrl;
+        private String apiKey;
+        private String organizationId;
+        private String projectId;
+
+        private String modelName;
+        private Double temperature;
+        private Duration timeout;
+        private Boolean logRequests;
+        private Boolean logResponses;
+        private Map<String, String> customHeaders;
+        private Proxy proxy;
+
         public OpenAiStreamingCompletionModelBuilder() {
             // This is public so it can be extended
-            // By default with Lombok it becomes package private
         }
 
         public OpenAiStreamingCompletionModelBuilder modelName(String modelName) {
@@ -176,9 +130,63 @@ public class OpenAiStreamingCompletionModel implements StreamingCompletionModel,
             return this;
         }
 
-        public OpenAiStreamingCompletionModelBuilder modelName(ChatCompletionModel modelName) {
+        public OpenAiStreamingCompletionModelBuilder modelName(CompletionModelName modelName) {
             this.modelName = modelName.toString();
             return this;
+        }
+
+        public OpenAiStreamingCompletionModelBuilder baseUrl(String baseUrl) {
+            this.baseUrl = baseUrl;
+            return this;
+        }
+
+        public OpenAiStreamingCompletionModelBuilder apiKey(String apiKey) {
+            this.apiKey = apiKey;
+            return this;
+        }
+
+        public OpenAiStreamingCompletionModelBuilder organizationId(String organizationId) {
+            this.organizationId = organizationId;
+            return this;
+        }
+
+        public OpenAiStreamingCompletionModelBuilder projectId(String projectId) {
+            this.projectId = projectId;
+            return this;
+        }
+
+        public OpenAiStreamingCompletionModelBuilder temperature(Double temperature) {
+            this.temperature = temperature;
+            return this;
+        }
+
+        public OpenAiStreamingCompletionModelBuilder timeout(Duration timeout) {
+            this.timeout = timeout;
+            return this;
+        }
+
+        public OpenAiStreamingCompletionModelBuilder logRequests(Boolean logRequests) {
+            this.logRequests = logRequests;
+            return this;
+        }
+
+        public OpenAiStreamingCompletionModelBuilder logResponses(Boolean logResponses) {
+            this.logResponses = logResponses;
+            return this;
+        }
+
+        public OpenAiStreamingCompletionModelBuilder customHeaders(Map<String, String> customHeaders) {
+            this.customHeaders = customHeaders;
+            return this;
+        }
+
+        public OpenAiStreamingCompletionModelBuilder proxy(Proxy proxy) {
+            this.proxy = proxy;
+            return this;
+        }
+
+        public OpenAiStreamingCompletionModel build() {
+            return new OpenAiStreamingCompletionModel(this);
         }
     }
 }

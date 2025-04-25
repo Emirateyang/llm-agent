@@ -3,7 +3,7 @@ package com.llmagent.openai.embedding;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum EmbeddingModel {
+public enum EmbeddingModelName {
 
     TEXT_EMBEDDING_ADA_002("text-embedding-ada-002", 1536),
 
@@ -13,7 +13,7 @@ public enum EmbeddingModel {
     private final String value;
     private final Integer dimension;
 
-    EmbeddingModel(String value, Integer dimension) {
+    EmbeddingModelName(String value, Integer dimension) {
         this.value = value;
         this.dimension = dimension;
     }
@@ -27,10 +27,10 @@ public enum EmbeddingModel {
         return dimension;
     }
 
-    private static final Map<String, Integer> KNOWN_DIMENSION = new HashMap<>(EmbeddingModel.values().length);
+    private static final Map<String, Integer> KNOWN_DIMENSION = new HashMap<>(EmbeddingModelName.values().length);
 
     static {
-        for (EmbeddingModel embeddingModelName : EmbeddingModel.values()) {
+        for (EmbeddingModelName embeddingModelName : EmbeddingModelName.values()) {
             KNOWN_DIMENSION.put(embeddingModelName.toString(), embeddingModelName.dimension());
         }
     }

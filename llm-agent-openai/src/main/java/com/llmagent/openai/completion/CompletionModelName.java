@@ -1,12 +1,12 @@
 package com.llmagent.openai.completion;
 
-public enum CompletionModel {
+public enum CompletionModelName {
 
     GPT_3_5_TURBO_INSTRUCT("gpt-3.5-turbo-instruct");
 
     private final String value;
 
-    CompletionModel(String value) {
+    CompletionModelName(String value) {
         this.value = value;
     }
 

@@ -1,6 +1,6 @@
 package com.llmagent.openai.embedding;
 
-import com.llmagent.openai.Usage;
+import com.llmagent.openai.token.Usage;
 import com.llmagent.vector.store.VectorData;
 
 import java.util.Collections;

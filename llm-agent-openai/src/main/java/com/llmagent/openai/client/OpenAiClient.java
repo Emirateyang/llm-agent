@@ -26,19 +26,11 @@ import java.util.Map;
 public abstract class OpenAiClient {
     public abstract SyncOrAsyncOrStreaming<CompletionResponse> completion(CompletionRequest request);
 
-    public abstract SyncOrAsyncOrStreaming<String> completion(String prompt);
-
     public abstract SyncOrAsyncOrStreaming<ChatCompletionResponse> chatCompletion(ChatCompletionRequest request);
-
-    public abstract SyncOrAsyncOrStreaming<String> chatCompletion(String userMessage);
 
     public abstract SyncOrAsync<EmbeddingResponse> embedding(EmbeddingRequest request);
 
-    public abstract SyncOrAsync<List<Float>> embedding(String input);
-
     public abstract SyncOrAsync<ModerationResponse> moderation(ModerationRequest request);
-
-    public abstract SyncOrAsync<ModerationResult> moderation(String input);
 
     public abstract SyncOrAsync<GenerateImagesResponse> imagesGeneration(GenerateImagesRequest request);
 
@@ -58,6 +50,7 @@ public abstract class OpenAiClient {
 
         public String baseUrl = "https://api.openai.com/v1/";
         public String organizationId;
+        public String projectId;
         public String apiVersion;
         public String openAiApiKey;
         public Duration callTimeout = Duration.ofSeconds(60);
@@ -95,6 +88,16 @@ public abstract class OpenAiClient {
          */
         public B organizationId(String organizationId) {
             this.organizationId = organizationId;
+            return (B) this;
+        }
+
+        /**
+         * @param projectId The OpenAI Project ID.
+         *                  More info <a href="https://platform.openai.com/docs/api-reference/organizations-and-projects-optional">here</a>.
+         * @return builder
+         */
+        public B projectId(String projectId) {
+            this.projectId = projectId;
             return (B) this;
         }
 

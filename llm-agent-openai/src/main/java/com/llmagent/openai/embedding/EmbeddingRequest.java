@@ -75,7 +75,7 @@ public final class EmbeddingRequest {
 
     public static final class Builder {
 
-        private String model = EmbeddingModel.TEXT_EMBEDDING_ADA_002.toString();
+        private String model = EmbeddingModelName.TEXT_EMBEDDING_ADA_002.toString();
         private List<String> input;
         private Integer dimensions;
         private String user;
@@ -83,7 +83,7 @@ public final class EmbeddingRequest {
         private Builder() {
         }
 
-        public Builder model(EmbeddingModel model) {
+        public Builder model(EmbeddingModelName model) {
             return model(model.toString());
         }
 

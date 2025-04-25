@@ -1,9 +1,12 @@
 package com.llmagent.openai;
 
 import com.llmagent.data.message.AiMessage;
-import com.llmagent.llm.Tokenizer;
+import com.llmagent.llm.chat.response.ChatResponse;
+import com.llmagent.llm.output.FinishReason;
 import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.llm.output.TokenUsage;
+import com.llmagent.openai.chat.OpenAiChatResponseMetadata;
+import com.llmagent.openai.token.Usage;
 import com.llmagent.openai.tool.FunctionCall;
 import com.llmagent.openai.tool.ToolCall;
 import com.llmagent.llm.tool.ToolRequest;
@@ -16,8 +19,11 @@ import com.llmagent.openai.completion.CompletionResponse;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.llmagent.openai.OpenAiHelper.finishReasonFrom;
+import static com.llmagent.openai.OpenAiHelper.tokenUsageFrom;
+import static com.llmagent.util.StringUtil.isNullOrBlank;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
@@ -35,17 +41,38 @@ public class OpenAiStreamingResponseBuilder {
 
     private final Map<Integer, ToolRequestBuilder> indexToToolExecutionRequestBuilder = new ConcurrentHashMap<>();
 
-    private volatile String finishReason;
-
-    private final Integer inputTokenCount;
-
-    public OpenAiStreamingResponseBuilder(Integer inputTokenCount) {
-        this.inputTokenCount = inputTokenCount;
-    }
+    private final AtomicReference<String> id = new AtomicReference<>();
+    private final AtomicReference<Long> created = new AtomicReference<>();
+    private final AtomicReference<String> model = new AtomicReference<>();
+    private final AtomicReference<String> serviceTier = new AtomicReference<>();
+    private final AtomicReference<String> systemFingerprint = new AtomicReference<>();
+    private final AtomicReference<TokenUsage> tokenUsage = new AtomicReference<>();
+    private final AtomicReference<FinishReason> finishReason = new AtomicReference<>();
 
     public void append(ChatCompletionResponse partialResponse) {
         if (partialResponse == null) {
             return;
+        }
+
+        if (!isNullOrBlank(partialResponse.id())) {
+            this.id.set(partialResponse.id());
+        }
+        if (partialResponse.created() != null) {
+            this.created.set(partialResponse.created());
+        }
+        if (!isNullOrBlank(partialResponse.model())) {
+            this.model.set(partialResponse.model());
+        }
+        if (!isNullOrBlank(partialResponse.serviceTier())) {
+            this.serviceTier.set(partialResponse.serviceTier());
+        }
+        if (!isNullOrBlank(partialResponse.systemFingerprint())) {
+            this.systemFingerprint.set(partialResponse.systemFingerprint());
+        }
+
+        Usage usage = partialResponse.usage();
+        if (usage != null) {
+            this.tokenUsage.set(tokenUsageFrom(usage));
         }
 
         List<ChatCompletionChoice> choices = partialResponse.choices();
@@ -60,7 +87,7 @@ public class OpenAiStreamingResponseBuilder {
 
         String finishReason = chatCompletionChoice.finishReason();
         if (finishReason != null) {
-            this.finishReason = finishReason;
+            this.finishReason.set(finishReasonFrom(finishReason));
         }
 
         Delta delta = chatCompletionChoice.delta();
@@ -79,17 +106,13 @@ public class OpenAiStreamingResponseBuilder {
 
             ToolRequestBuilder toolRequestBuilder
                     = indexToToolExecutionRequestBuilder.computeIfAbsent(toolCall.index(), idx -> new ToolRequestBuilder());
-
             if (toolCall.id() != null) {
                 toolRequestBuilder.idBuilder.append(toolCall.id());
             }
-
             FunctionCall functionCall = toolCall.function();
-
             if (functionCall.name() != null) {
                 toolRequestBuilder.nameBuilder.append(functionCall.name());
             }
-
             if (functionCall.arguments() != null) {
                 toolRequestBuilder.argumentsBuilder.append(functionCall.arguments());
             }
@@ -99,6 +122,11 @@ public class OpenAiStreamingResponseBuilder {
     public void append(CompletionResponse partialResponse) {
         if (partialResponse == null) {
             return;
+        }
+
+        Usage usage = partialResponse.usage();
+        if (usage != null) {
+            this.tokenUsage.set(tokenUsageFrom(usage));
         }
 
         List<CompletionChoice> choices = partialResponse.choices();
@@ -113,7 +141,7 @@ public class OpenAiStreamingResponseBuilder {
 
         String finishReason = completionChoice.finishReason();
         if (finishReason != null) {
-            this.finishReason = finishReason;
+            this.finishReason.set(finishReasonFrom(finishReason));
         }
 
         String token = completionChoice.text();
@@ -122,16 +150,60 @@ public class OpenAiStreamingResponseBuilder {
         }
     }
 
-    public LlmResponse<AiMessage> build(Tokenizer tokenizer, boolean forcefulToolExecution) {
+//    public LlmResponse<AiMessage> build() {
+//
+//        String content = contentBuilder.toString();
+//        if (!content.isEmpty()) {
+//            return LlmResponse.from(
+//                    AiMessage.from(content),
+//                    tokenUsage.get(),
+//                    finishReason.get()
+//            );
+//        }
+//
+//        String toolName = toolNameBuilder.toString();
+//        if (!toolName.isEmpty()) {
+//            ToolRequest toolExecutionRequest = ToolRequest.builder()
+//                    .name(toolName)
+//                    .arguments(toolArgumentsBuilder.toString())
+//                    .build();
+//            return LlmResponse.from(
+//                    AiMessage.from(toolExecutionRequest),
+//                    tokenUsage.get(),
+//                    finishReason.get()
+//            );
+//        }
+//
+//        if (!indexToToolExecutionRequestBuilder.isEmpty()) {
+//            List<ToolRequest> toolRequests = indexToToolExecutionRequestBuilder.values().stream()
+//                    .map(it -> ToolRequest.builder()
+//                            .id(it.idBuilder.toString())
+//                            .name(it.nameBuilder.toString())
+//                            .arguments(it.argumentsBuilder.toString())
+//                            .build())
+//                    .collect(toList());
+//            return LlmResponse.from(
+//                    AiMessage.from(toolRequests),
+//                    tokenUsage.get(),
+//                    finishReason.get()
+//            );
+//        }
+//        return null;
+//    }
 
-        String content = contentBuilder.toString();
-        if (!content.isEmpty()) {
-            return LlmResponse.from(
-                    AiMessage.from(content),
-                    tokenUsage(content, tokenizer),
-                    finishReasonFrom(finishReason)
-            );
-        }
+    public ChatResponse build() {
+
+        OpenAiChatResponseMetadata chatResponseMetadata = OpenAiChatResponseMetadata.builder()
+                .id(id.get())
+                .modelName(model.get())
+                .tokenUsage(tokenUsage.get())
+                .finishReason(finishReason.get())
+                .created(created.get())
+                .serviceTier(serviceTier.get())
+                .systemFingerprint(systemFingerprint.get())
+                .build();
+
+        String text = contentBuilder.toString();
 
         String toolName = toolNameBuilder.toString();
         if (!toolName.isEmpty()) {
@@ -139,55 +211,45 @@ public class OpenAiStreamingResponseBuilder {
                     .name(toolName)
                     .arguments(toolArgumentsBuilder.toString())
                     .build();
-            return LlmResponse.from(
-                    AiMessage.from(toolExecutionRequest),
-                    tokenUsage(singletonList(toolExecutionRequest), tokenizer, forcefulToolExecution),
-                    finishReasonFrom(finishReason)
-            );
+
+            AiMessage aiMessage = isNullOrBlank(text) ?
+                    AiMessage.from(toolExecutionRequest) :
+                    AiMessage.from(text, singletonList(toolExecutionRequest));
+
+            return ChatResponse.builder()
+                    .aiMessage(aiMessage)
+                    .metadata(chatResponseMetadata)
+                    .build();
         }
 
         if (!indexToToolExecutionRequestBuilder.isEmpty()) {
-            List<ToolRequest> toolRequests = indexToToolExecutionRequestBuilder.values().stream()
+            List<ToolRequest> toolExecutionRequests = indexToToolExecutionRequestBuilder.values().stream()
                     .map(it -> ToolRequest.builder()
                             .id(it.idBuilder.toString())
                             .name(it.nameBuilder.toString())
                             .arguments(it.argumentsBuilder.toString())
                             .build())
                     .collect(toList());
-            return LlmResponse.from(
-                    AiMessage.from(toolRequests),
-                    tokenUsage(toolRequests, tokenizer, forcefulToolExecution),
-                    finishReasonFrom(finishReason)
-            );
+
+            AiMessage aiMessage = isNullOrBlank(text) ?
+                    AiMessage.from(toolExecutionRequests) :
+                    AiMessage.from(text, toolExecutionRequests);
+
+            return ChatResponse.builder()
+                    .aiMessage(aiMessage)
+                    .metadata(chatResponseMetadata)
+                    .build();
+        }
+
+        if (!isNullOrBlank(text)) {
+            AiMessage aiMessage = AiMessage.from(text);
+            return ChatResponse.builder()
+                    .aiMessage(aiMessage)
+                    .metadata(chatResponseMetadata)
+                    .build();
         }
 
         return null;
-    }
-
-    private TokenUsage tokenUsage(String content, Tokenizer tokenizer) {
-        if (tokenizer == null) {
-            return null;
-        }
-        int outputTokenCount = tokenizer.estimateTokenCountInText(content);
-        return new TokenUsage(inputTokenCount, outputTokenCount);
-    }
-
-    private TokenUsage tokenUsage(List<ToolRequest> toolRequests, Tokenizer tokenizer, boolean forcefulToolExecution) {
-        if (tokenizer == null) {
-            return null;
-        }
-
-        int outputTokenCount = 0;
-        if (forcefulToolExecution) {
-            // OpenAI calculates output tokens differently when tool is executed forcefully
-            for (ToolRequest toolRequest : toolRequests) {
-                outputTokenCount += tokenizer.estimateTokenCountInForcefulToolRequest(toolRequest);
-            }
-        } else {
-            outputTokenCount = tokenizer.estimateTokenCountInToolRequests(toolRequests);
-        }
-
-        return new TokenUsage(inputTokenCount, outputTokenCount);
     }
 
     private static class ToolRequestBuilder {

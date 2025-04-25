@@ -1,20 +1,38 @@
 package com.llmagent.openai;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.llmagent.openai.json.JsonSchema;
+
 import java.util.Objects;
 
+@JsonDeserialize(builder = ResponseFormat.Builder.class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class ResponseFormat {
-    private final Object type;
+    @JsonProperty
+    private final ResponseFormatType type;
+    @JsonProperty
+    private final JsonSchema jsonSchema;
 
-    public ResponseFormat(ResponseFormatType type) {
-        this.type = type;
+    @JsonCreator
+    public ResponseFormat(Builder builder) {
+        this.type = builder.type;
+        this.jsonSchema = builder.jsonSchema;
     }
 
-    public ResponseFormat(String type) {
-        this.type = type;
-    }
-
-    public Object type() {
+    public ResponseFormatType type() {
         return type;
+    }
+
+    public JsonSchema jsonSchema() {
+        return jsonSchema;
     }
 
     @Override
@@ -25,13 +43,15 @@ public class ResponseFormat {
     }
 
     private boolean equalTo(ResponseFormat another) {
-        return Objects.equals(type, another.type);
+        return Objects.equals(type, another.type)
+                && Objects.equals(jsonSchema, another.jsonSchema);
     }
 
     @Override
     public int hashCode() {
         int h = 5381;
         h += (h << 5) + Objects.hashCode(type);
+        h += (h << 5) + Objects.hashCode(jsonSchema);
         return h;
     }
 
@@ -39,6 +59,34 @@ public class ResponseFormat {
     public String toString() {
         return "ResponseFormat{" +
                 "type=" + type +
+                ", jsonSchema=" + jsonSchema +
                 "}";
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    @JsonPOJOBuilder(withPrefix = "")
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    public static class Builder {
+
+        private ResponseFormatType type;
+        private JsonSchema jsonSchema;
+
+        public Builder type(ResponseFormatType type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder jsonSchema(JsonSchema jsonSchema) {
+            this.jsonSchema = jsonSchema;
+            return this;
+        }
+
+        public ResponseFormat build() {
+            return new ResponseFormat(this);
+        }
     }
 }

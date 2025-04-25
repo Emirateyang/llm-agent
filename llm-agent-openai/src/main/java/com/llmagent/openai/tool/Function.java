@@ -11,11 +11,13 @@ public class Function {
 
     private final String name;
     private final String description;
+    private final Boolean strict;
     private final ToolParameters parameters;
 
     private Function(Builder builder) {
         this.name = builder.name;
         this.description = builder.description;
+        this.strict = builder.strict;
         this.parameters = builder.parameters;
     }
 
@@ -31,6 +33,10 @@ public class Function {
         return parameters;
     }
 
+    public Boolean strict() {
+        return strict;
+    }
+
     @Override
     public boolean equals(Object another) {
         if (this == another) return true;
@@ -41,6 +47,7 @@ public class Function {
     private boolean equalTo(Function another) {
         return Objects.equals(name, another.name)
                 && Objects.equals(description, another.description)
+                && Objects.equals(strict, another.strict)
                 && Objects.equals(parameters, another.parameters);
     }
 
@@ -49,6 +56,7 @@ public class Function {
         int h = 5381;
         h += (h << 5) + Objects.hashCode(name);
         h += (h << 5) + Objects.hashCode(description);
+        h += (h << 5) + Objects.hashCode(strict);
         h += (h << 5) + Objects.hashCode(parameters);
         return h;
     }
@@ -58,6 +66,7 @@ public class Function {
         return "Function{"
                 + "name=" + name
                 + ", description=" + description
+                + ", strict=" + strict
                 + ", parameters=" + parameters
                 + "}";
     }
@@ -70,6 +79,7 @@ public class Function {
 
         private String name;
         private String description;
+        private Boolean strict;
         private ToolParameters parameters;
 
         private Builder() {
@@ -82,6 +92,11 @@ public class Function {
 
         public Builder description(String description) {
             this.description = description;
+            return this;
+        }
+
+        public Builder strict(Boolean strict) {
+            this.strict = strict;
             return this;
         }
 

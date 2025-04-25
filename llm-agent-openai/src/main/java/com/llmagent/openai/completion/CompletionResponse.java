@@ -1,7 +1,7 @@
 package com.llmagent.openai.completion;
 
 
-import com.llmagent.openai.Usage;
+import com.llmagent.openai.token.Usage;
 
 import java.util.Collections;
 import java.util.List;

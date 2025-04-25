@@ -8,9 +8,9 @@ import com.llmagent.llm.Tokenizer;
 import com.llmagent.llm.tool.ToolParameters;
 import com.llmagent.llm.tool.ToolRequest;
 import com.llmagent.llm.tool.ToolSpecification;
-import com.llmagent.openai.chat.ChatCompletionModel;
-import com.llmagent.openai.completion.CompletionModel;
-import com.llmagent.openai.embedding.EmbeddingModel;
+import com.llmagent.openai.chat.ChatLanguageModelName;
+import com.llmagent.openai.completion.CompletionModelName;
+import com.llmagent.openai.embedding.EmbeddingModelName;
 import com.llmagent.util.JsonUtil;
 import com.llmagent.util.StringUtil;
 
@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import static com.llmagent.exception.Exceptions.illegalArgument;
-import static com.llmagent.openai.chat.ChatCompletionModel.*;
+import static com.llmagent.openai.chat.ChatLanguageModelName.*;
 import static com.llmagent.util.ValidationUtil.ensureNotBlank;
 import static java.util.Collections.singletonList;
 
@@ -38,23 +38,23 @@ public class OpenAiTokenizer implements Tokenizer {
     }
 
     /**
-     * Creates an instance of the {@code OpenAiTokenizer} for a given {@link ChatCompletionModel}.
+     * Creates an instance of the {@code OpenAiTokenizer} for a given {@link ChatLanguageModelName}.
      */
-    public OpenAiTokenizer(ChatCompletionModel modelName) {
+    public OpenAiTokenizer(ChatLanguageModelName modelName) {
         this(modelName.toString());
     }
 
     /**
-     * Creates an instance of the {@code OpenAiTokenizer} for a given {@link EmbeddingModel}.
+     * Creates an instance of the {@code OpenAiTokenizer} for a given {@link EmbeddingModelName}.
      */
-    public OpenAiTokenizer(EmbeddingModel modelName) {
+    public OpenAiTokenizer(EmbeddingModelName modelName) {
         this(modelName.toString());
     }
 
     /**
-     * Creates an instance of the {@code OpenAiTokenizer} for a given {@link CompletionModel}.
+     * Creates an instance of the {@code OpenAiTokenizer} for a given {@link CompletionModelName}.
      */
-    public OpenAiTokenizer(CompletionModel modelName) {
+    public OpenAiTokenizer(CompletionModelName modelName) {
         this(modelName.toString());
     }
 

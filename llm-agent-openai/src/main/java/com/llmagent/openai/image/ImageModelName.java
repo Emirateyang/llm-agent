@@ -1,6 +1,6 @@
 package com.llmagent.openai.image;
 
-public enum ImageModel {
+public enum ImageModelName {
     DALL_E_2("dall-e-2"),
     DALL_E_3("dall-e-3");
 
@@ -19,7 +19,7 @@ public enum ImageModel {
 
     private final String value;
 
-    ImageModel(String value) {
+    ImageModelName(String value) {
         this.value = value;
     }
 

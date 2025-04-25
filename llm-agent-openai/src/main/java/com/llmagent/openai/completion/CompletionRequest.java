@@ -1,5 +1,7 @@
 package com.llmagent.openai.completion;
 
+import com.llmagent.openai.token.StreamOptions;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +16,7 @@ public class CompletionRequest {
     private final Double topP;
     private final Integer n;
     private final Boolean stream;
+    private final StreamOptions streamOptions;
     private final Integer logprobs;
     private final Boolean echo;
     private final List<String> stop;
@@ -32,6 +35,7 @@ public class CompletionRequest {
         this.topP = builder.topP;
         this.n = builder.n;
         this.stream = builder.stream;
+        this.streamOptions = builder.streamOptions;
         this.logprobs = builder.logprobs;
         this.echo = builder.echo;
         this.stop = builder.stop;
@@ -72,6 +76,10 @@ public class CompletionRequest {
 
     public Boolean stream() {
         return stream;
+    }
+
+    public StreamOptions streamOptions() {
+        return streamOptions;
     }
 
     public Integer logprobs() {
@@ -122,6 +130,7 @@ public class CompletionRequest {
                 && Objects.equals(topP, another.topP)
                 && Objects.equals(n, another.n)
                 && Objects.equals(stream, another.stream)
+                && Objects.equals(streamOptions, another.streamOptions)
                 && Objects.equals(logprobs, another.logprobs)
                 && Objects.equals(echo, another.echo)
                 && Objects.equals(stop, another.stop)
@@ -143,6 +152,7 @@ public class CompletionRequest {
         h += (h << 5) + Objects.hashCode(topP);
         h += (h << 5) + Objects.hashCode(n);
         h += (h << 5) + Objects.hashCode(stream);
+        h += (h << 5) + Objects.hashCode(streamOptions);
         h += (h << 5) + Objects.hashCode(logprobs);
         h += (h << 5) + Objects.hashCode(echo);
         h += (h << 5) + Objects.hashCode(stop);
@@ -165,6 +175,7 @@ public class CompletionRequest {
                 + ", topP=" + topP
                 + ", n=" + n
                 + ", stream=" + stream
+                + ", streamOptions=" + streamOptions
                 + ", logprobs=" + logprobs
                 + ", echo=" + echo
                 + ", stop=" + stop
@@ -182,7 +193,7 @@ public class CompletionRequest {
 
     public static final class Builder {
 
-        private String model = CompletionModel.GPT_3_5_TURBO_INSTRUCT.toString();
+        private String model = CompletionModelName.GPT_3_5_TURBO_INSTRUCT.toString();
         private String prompt;
         private String suffix;
         private Integer maxTokens;
@@ -190,6 +201,7 @@ public class CompletionRequest {
         private Double topP;
         private Integer n;
         private Boolean stream;
+        private StreamOptions streamOptions;
         private Integer logprobs;
         private Boolean echo;
         private List<String> stop;
@@ -211,6 +223,7 @@ public class CompletionRequest {
             topP(request.topP);
             n(request.n);
             stream(request.stream);
+            streamOptions(request.streamOptions);
             logprobs(request.logprobs);
             echo(request.echo);
             stop(request.stop);
@@ -222,7 +235,7 @@ public class CompletionRequest {
             return this;
         }
 
-        public Builder model(CompletionModel model) {
+        public Builder model(CompletionModelName model) {
             return model(model.toString());
         }
 
@@ -263,6 +276,11 @@ public class CompletionRequest {
 
         public Builder stream(Boolean stream) {
             this.stream = stream;
+            return this;
+        }
+
+        public Builder streamOptions(StreamOptions streamOptions) {
+            this.streamOptions = streamOptions;
             return this;
         }
 

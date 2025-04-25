@@ -1,6 +1,6 @@
 package com.llmagent.openai.chat;
 
-public enum ChatCompletionModel {
+public enum ChatLanguageModelName {
     GPT_3_5_TURBO("gpt-3.5-turbo"), // alias
     GPT_3_5_TURBO_0613("gpt-3.5-turbo-0613"),
     GPT_3_5_TURBO_1106("gpt-3.5-turbo-1106"),
@@ -33,7 +33,7 @@ public enum ChatCompletionModel {
 
     private final String value;
 
-    ChatCompletionModel(String value) {
+    ChatLanguageModelName(String value) {
         this.value = value;
     }
 

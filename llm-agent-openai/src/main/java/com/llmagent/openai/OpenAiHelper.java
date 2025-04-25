@@ -6,10 +6,14 @@ import com.llmagent.data.message.Content;
 import com.llmagent.data.message.SystemMessage;
 import com.llmagent.data.message.ToolMessage;
 import com.llmagent.data.message.UserMessage;
+import com.llmagent.llm.chat.request.ChatRequest;
+import com.llmagent.llm.chat.request.ToolChoice;
+import com.llmagent.llm.chat.request.ChatRequestParameters;
+import com.llmagent.llm.chat.request.json.JsonObjectSchema;
+import com.llmagent.llm.chat.response.ChatResponse;
+import com.llmagent.llm.chat.response.ChatResponseMetadata;
 import com.llmagent.llm.tool.*;
 import com.llmagent.openai.chat.*;
-import com.llmagent.llm.chat.listener.ChatModelRequest;
-import com.llmagent.llm.chat.listener.ChatModelResponse;
 import com.llmagent.llm.output.FinishReason;
 import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.llm.output.TokenUsage;
@@ -18,15 +22,18 @@ import com.llmagent.openai.chat.ChatCompletionResponse;
 import com.llmagent.openai.chat.ContentType;
 import com.llmagent.openai.image.ImageDetail;
 import com.llmagent.openai.image.ImageUrl;
-import com.llmagent.openai.tool.Function;
-import com.llmagent.openai.tool.FunctionCall;
+import com.llmagent.openai.token.Usage;
+import com.llmagent.openai.tool.*;
 import com.llmagent.openai.tool.Tool;
-import com.llmagent.openai.tool.ToolCall;
 
 import java.util.Collection;
 import java.util.List;
 
 import static com.llmagent.exception.Exceptions.illegalArgument;
+import static com.llmagent.llm.chat.request.json.JsonSchemaElementHelper.toMap;
+import static com.llmagent.llm.chat.response.ResponseFormat.JSON;
+import static com.llmagent.openai.ResponseFormatType.JSON_OBJECT;
+import static com.llmagent.openai.ResponseFormatType.JSON_SCHEMA;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -133,16 +140,20 @@ public class OpenAiHelper {
         return ImageDetail.valueOf(detailLevel.name());
     }
 
-    public static List<Tool> toTools(Collection<ToolSpecification> toolSpecifications) {
+    public static List<Tool> toTools(Collection<ToolSpecification> toolSpecifications, boolean strict) {
+        if (toolSpecifications == null) {
+            return null;
+        }
         return toolSpecifications.stream()
-                .map(OpenAiHelper::toTool)
+                .map(a -> toTool(a, strict))
                 .collect(toList());
     }
 
-    private static Tool toTool(ToolSpecification toolSpecification) {
+    private static Tool toTool(ToolSpecification toolSpecification, boolean strict) {
         Function function = Function.builder()
                 .name(toolSpecification.name())
                 .description(toolSpecification.description())
+                .strict(strict)
                 .parameters(toolSpecification.parameters())
                 .build();
         return Tool.from(function);
@@ -216,7 +227,7 @@ public class OpenAiHelper {
         if (modelName == null) {
             return false;
         }
-        for (ChatCompletionModel openAiChatModelName : ChatCompletionModel.values()) {
+        for (ChatLanguageModelName openAiChatModelName : ChatLanguageModelName.values()) {
             if (modelName.contains(openAiChatModelName.toString())) {
                 return true;
             }
@@ -228,32 +239,137 @@ public class OpenAiHelper {
         return LlmResponse.from(response.content(), null, response.finishReason());
     }
 
-    static ChatModelRequest createModelListenerRequest(ChatCompletionRequest request,
-                                                       List<ChatMessage> messages,
-                                                       List<ToolSpecification> toolSpecifications) {
-        return ChatModelRequest.builder()
-                .model(request.model())
+    static ChatRequest createModelListenerRequest(ChatCompletionRequest request,
+                                                  List<ChatMessage> messages,
+                                                  List<ToolSpecification> toolSpecifications) {
+        return ChatRequest.builder()
+                .messages(messages)
+                .parameters(ChatRequestParameters.builder()
+                .modelName(request.model())
                 .temperature(request.temperature())
                 .topP(request.topP())
-                .maxTokens(request.maxTokens())
-                .messages(messages)
-                .toolSpecifications(toolSpecifications)
-                .build();
+                .maxOutputTokens(request.maxTokens())
+                .toolSpecifications(toolSpecifications).build()
+                ).build();
     }
 
-    static ChatModelResponse createModelListenerResponse(String responseId,
-                                                         String responseModel,
-                                                         LlmResponse<AiMessage> response) {
+    static ChatResponse createModelListenerResponse(String responseId,
+                                                    String responseModel,
+                                                    LlmResponse<AiMessage> response) {
         if (response == null) {
             return null;
         }
 
-        return ChatModelResponse.builder()
-                .id(responseId)
-                .model(responseModel)
-                .tokenUsage(response.tokenUsage())
-                .finishReason(response.finishReason())
+        return ChatResponse.builder()
                 .aiMessage(response.content())
-                .build();
+                .metadata(ChatResponseMetadata.builder()
+                        .id(responseId)
+                        .modelName(responseModel)
+                        .tokenUsage(response.tokenUsage())
+                        .finishReason(response.finishReason()).build()).build();
+    }
+
+    public static ToolChoiceMode toOpenAiToolChoice(ToolChoice toolChoice) {
+        if (toolChoice == null) {
+            return null;
+        }
+
+        return switch (toolChoice) {
+            case AUTO -> ToolChoiceMode.AUTO;
+            case REQUIRED -> ToolChoiceMode.REQUIRED;
+        };
+    }
+
+    static ResponseFormat toOpenAiResponseFormat(com.llmagent.llm.chat.response.ResponseFormat responseFormat, Boolean strict) {
+        if (responseFormat == null || responseFormat.type() == com.llmagent.llm.chat.response.ResponseFormatType.TEXT) {
+            return null;
+        }
+
+        com.llmagent.llm.chat.request.json.JsonSchema jsonSchema = responseFormat.jsonSchema();
+        if (jsonSchema == null) {
+            return ResponseFormat.builder()
+                    .type(JSON_OBJECT)
+                    .build();
+        } else {
+            if (!(jsonSchema.rootElement() instanceof JsonObjectSchema)) {
+                throw new IllegalArgumentException(
+                        "For OpenAI, the root element of the JSON Schema must be a JsonObjectSchema, but it was: "
+                                + jsonSchema.rootElement().getClass());
+            }
+            com.llmagent.openai.json.JsonSchema openAiJsonSchema = com.llmagent.openai.json.JsonSchema.builder()
+                    .name(jsonSchema.name())
+                    .strict(strict)
+                    .schema(toMap(jsonSchema.rootElement(), strict))
+                    .build();
+            return ResponseFormat.builder()
+                    .type(JSON_SCHEMA)
+                    .jsonSchema(openAiJsonSchema)
+                    .build();
+        }
+    }
+
+    static ChatCompletionRequest.Builder toOpenAiChatRequest(
+            ChatRequest chatRequest,
+            OpenAiChatRequestParameters parameters,
+            Boolean strictTools,
+            Boolean strictJsonSchema) {
+        return ChatCompletionRequest.builder()
+                .messages(toOpenAiMessages(chatRequest.messages()))
+                // common parameters
+                .model(parameters.modelName())
+                .temperature(parameters.temperature())
+                .topP(parameters.topP())
+                .frequencyPenalty(parameters.frequencyPenalty())
+                .presencePenalty(parameters.presencePenalty())
+                .maxTokens(parameters.maxOutputTokens())
+                .stop(parameters.stopSequences())
+                .tools(toTools(parameters.toolSpecifications(), strictTools))
+                .toolChoice(toOpenAiToolChoice(parameters.toolChoice()))
+                .responseFormat(toOpenAiResponseFormat(parameters.responseFormat(), strictJsonSchema))
+                // OpenAI specific parameters
+                .maxCompletionTokens(parameters.maxCompletionTokens())
+                .logitBias(parameters.logitBias())
+                .parallelToolCalls(parameters.parallelToolCalls())
+                .seed(parameters.seed())
+                .user(parameters.user())
+                .store(parameters.store())
+                .metadata(parameters.metadata())
+                .serviceTier(parameters.serviceTier())
+                .reasoningEffort(parameters.reasoningEffort());
+    }
+
+    static ChatCompletionRequest.Builder toOpenAiChatRequest(
+            List<ChatMessage> messages,
+            OpenAiChatRequestParameters parameters,
+            Boolean strictJsonSchema) {
+        return ChatCompletionRequest.builder()
+                .messages(toOpenAiMessages(messages))
+                // common parameters
+                .model(parameters.modelName())
+                .temperature(parameters.temperature())
+                .topP(parameters.topP())
+                .frequencyPenalty(parameters.frequencyPenalty())
+                .presencePenalty(parameters.presencePenalty())
+                .maxTokens(parameters.maxOutputTokens())
+                .stop(parameters.stopSequences())
+                .responseFormat(toOpenAiResponseFormat(parameters.responseFormat(), strictJsonSchema))
+                // OpenAI specific parameters
+                .maxCompletionTokens(parameters.maxCompletionTokens())
+                .logitBias(parameters.logitBias())
+                .parallelToolCalls(parameters.parallelToolCalls())
+                .seed(parameters.seed())
+                .user(parameters.user())
+                .store(parameters.store())
+                .metadata(parameters.metadata())
+                .serviceTier(parameters.serviceTier())
+                .reasoningEffort(parameters.reasoningEffort());
+    }
+
+    public static com.llmagent.llm.chat.response.ResponseFormat fromOpenAiResponseFormat(String responseFormat) {
+        if ("json_object".equals(responseFormat)) {
+            return JSON;
+        } else {
+            return null;
+        }
     }
 }

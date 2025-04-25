@@ -1,6 +1,6 @@
 package com.llmagent.openai.chat;
 
-import com.llmagent.openai.Usage;
+import com.llmagent.openai.token.Usage;
 
 import java.util.Collections;
 import java.util.List;
@@ -9,11 +9,12 @@ import java.util.Objects;
 public  final class ChatCompletionResponse {
 
     private final String id;
-    private final Integer created;
+    private final Long created;
     private final String model;
     private final List<ChatCompletionChoice> choices;
     private final Usage usage;
     private final String systemFingerprint;
+    private final String serviceTier;
 
     private ChatCompletionResponse(Builder builder) {
         this.id = builder.id;
@@ -22,13 +23,14 @@ public  final class ChatCompletionResponse {
         this.choices = builder.choices;
         this.usage = builder.usage;
         this.systemFingerprint = builder.systemFingerprint;
+        this.serviceTier = builder.serviceTier;
     }
 
     public String id() {
         return id;
     }
 
-    public Integer created() {
+    public Long created() {
         return created;
     }
 
@@ -46,6 +48,10 @@ public  final class ChatCompletionResponse {
 
     public String systemFingerprint() {
         return systemFingerprint;
+    }
+
+    public String serviceTier() {
+        return serviceTier;
     }
 
     /**
@@ -68,7 +74,8 @@ public  final class ChatCompletionResponse {
                 && Objects.equals(model, another.model)
                 && Objects.equals(choices, another.choices)
                 && Objects.equals(usage, another.usage)
-                && Objects.equals(systemFingerprint, another.systemFingerprint);
+                && Objects.equals(systemFingerprint, another.systemFingerprint)
+                && Objects.equals(serviceTier, another.serviceTier);
     }
 
     @Override
@@ -80,6 +87,7 @@ public  final class ChatCompletionResponse {
         h += (h << 5) + Objects.hashCode(choices);
         h += (h << 5) + Objects.hashCode(usage);
         h += (h << 5) + Objects.hashCode(systemFingerprint);
+        h += (h << 5) + Objects.hashCode(serviceTier);
         return h;
     }
 
@@ -92,6 +100,7 @@ public  final class ChatCompletionResponse {
                 + ", choices=" + choices
                 + ", usage=" + usage
                 + ", systemFingerprint=" + systemFingerprint
+                + ", serviceTier=" + serviceTier
                 + "}";
     }
 
@@ -102,11 +111,12 @@ public  final class ChatCompletionResponse {
     public static final class Builder {
 
         private String id;
-        private Integer created;
+        private Long created;
         private String model;
         private List<ChatCompletionChoice> choices;
         private Usage usage;
         private String systemFingerprint;
+        private String serviceTier;
 
         private Builder() {
         }
@@ -116,7 +126,7 @@ public  final class ChatCompletionResponse {
             return this;
         }
 
-        public Builder created(Integer created) {
+        public Builder created(Long created) {
             this.created = created;
             return this;
         }
@@ -140,6 +150,11 @@ public  final class ChatCompletionResponse {
 
         public Builder systemFingerprint(String systemFingerprint) {
             this.systemFingerprint = systemFingerprint;
+            return this;
+        }
+
+        public Builder serviceTier(String serviceTier) {
+            this.serviceTier = serviceTier;
             return this;
         }
 
