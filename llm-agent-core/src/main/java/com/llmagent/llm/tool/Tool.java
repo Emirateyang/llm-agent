@@ -28,5 +28,5 @@ public @interface Tool {
      *
      * @return description of the tool.
      */
-    String[] value() default "";
+    String description() default "";
 }

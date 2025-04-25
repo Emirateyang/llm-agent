@@ -27,15 +27,33 @@ import java.util.List;
  */
 public interface EmbeddingModel {
 
+    /**
+     * Embed a text.
+     *
+     * @param text the text to embed.
+     * @return the embedding.
+     */
     default LlmResponse<VectorData> embed(String text) {
         return embed(TextSegment.from(text));
     }
 
+    /**
+     * Embed the text content of a TextSegment.
+     *
+     * @param textSegment the text segment to embed.
+     * @return the embedding.
+     */
     default LlmResponse<VectorData> embed(TextSegment textSegment) {
         LlmResponse<List<VectorData>> response = embedAll(Collections.singletonList(textSegment));
         return LlmResponse.from(response.content().get(0), response.tokenUsage(), response.finishReason());
     }
 
+    /**
+     * Embeds the text content of a list of TextSegments.
+     *
+     * @param documents the text segments to embed.
+     * @return the embeddings.
+     */
     LlmResponse<List<VectorData>> embedAll(List<TextSegment> documents);
 
     /**
