@@ -16,45 +16,26 @@ import java.util.List;
 public interface TokenCountEstimator {
 
     /**
-     * Estimates the count of tokens in the specified text.
-     * @param text the text
-     * @return the estimated count of tokens
+     * Estimates the count of tokens in the given text.
+     *
+     * @param text the text.
+     * @return the estimated count of tokens.
      */
-    default int estimateTokenCount(String text) {
-        return estimateTokenCount(UserMessage.userMessage(text));
-    }
+    int estimateTokenCountInText(String text);
 
     /**
-     * Estimates the count of tokens in the specified message.
-     * @param userMessage the message
-     * @return the estimated count of tokens
+     * Estimates the count of tokens in the given message.
+     *
+     * @param message the message.
+     * @return the estimated count of tokens.
      */
-    default int estimateTokenCount(UserMessage userMessage) {
-        return estimateTokenCount(Collections.singletonList(userMessage));
-    }
+    int estimateTokenCountInMessage(ChatMessage message);
 
     /**
-     * Estimates the count of tokens in the specified prompt.
-     * @param prompt the prompt
-     * @return the estimated count of tokens
+     * Estimates the count of tokens in the given messages.
+     *
+     * @param messages the messages.
+     * @return the estimated count of tokens.
      */
-    default int estimateTokenCount(Prompt prompt) {
-        return estimateTokenCount(prompt.text());
-    }
-
-    /**
-     * Estimates the count of tokens in the specified document.
-     * @param textSegment the document
-     * @return the estimated count of tokens
-     */
-    default int estimateTokenCount(TextSegment textSegment) {
-        return estimateTokenCount(textSegment.text());
-    }
-
-    /**
-     * Estimates the count of tokens in the specified list of messages.
-     * @param messages the list of messages
-     * @return the estimated count of tokens
-     */
-    int estimateTokenCount(List<ChatMessage> messages);
+    int estimateTokenCountInMessages(Iterable<ChatMessage> messages);
 }

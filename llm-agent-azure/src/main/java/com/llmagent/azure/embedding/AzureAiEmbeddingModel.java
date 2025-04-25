@@ -8,11 +8,7 @@ import com.azure.core.credential.KeyCredential;
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.http.ProxyOptions;
 import com.llmagent.azure.AzureAiEmbeddingModelBuilderFactory;
-import com.llmagent.azure.AzureAiTokenizer;
-import com.llmagent.data.message.ChatMessage;
 import com.llmagent.data.segment.TextSegment;
-import com.llmagent.llm.Tokenizer;
-import com.llmagent.llm.chat.TokenCountEstimator;
 import com.llmagent.llm.embedding.DimensionAwareEmbeddingModel;
 import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.llm.output.TokenUsage;
@@ -21,6 +17,7 @@ import com.llmagent.vector.store.VectorData;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.llmagent.azure.AzureAiHelper.setupSyncClient;
 import static com.llmagent.azure.embedding.AzureAiEmbeddingModelName.TEXT_EMBEDDING_ADA_002;
@@ -29,71 +26,77 @@ import static com.llmagent.util.ServiceHelper.loadFactories;
 import static com.llmagent.vector.store.VectorData.from;
 import static java.util.stream.Collectors.toList;
 
-public class AzureAiEmbeddingModel extends DimensionAwareEmbeddingModel implements TokenCountEstimator {
+public class AzureAiEmbeddingModel extends DimensionAwareEmbeddingModel {
 
     private static final int BATCH_SIZE = 16;
 
     private OpenAIClient client;
     private final String deploymentName;
-    private final Tokenizer tokenizer;
+    private final Integer dimensions;
 
     private AzureAiEmbeddingModel(OpenAIClient client,
-                                      String deploymentName,
-                                      Tokenizer tokenizer) {
-        this(deploymentName, tokenizer);
+                                  String deploymentName,
+                                  Integer dimensions) {
+        this(deploymentName, dimensions);
         this.client = client;
     }
 
-    public AzureAiEmbeddingModel(String endpoint,
-                                     String serviceVersion,
-                                     String apiKey,
-                                     String deploymentName,
-                                     Tokenizer tokenizer,
-                                     Duration timeout,
-                                     Integer maxRetries,
-                                     ProxyOptions proxyOptions,
-                                     boolean logRequestsAndResponses,
-                                     String userAgentSuffix) {
+    public AzureAiEmbeddingModel(
+         String endpoint,
+         String serviceVersion,
+         String apiKey,
+         String deploymentName,
+         Duration timeout,
+         Integer maxRetries,
+         ProxyOptions proxyOptions,
+         boolean logRequestsAndResponses,
+         String userAgentSuffix,
+         Integer dimensions,
+         Map<String, String> customHeaders) {
 
-        this(deploymentName, tokenizer);
-        this.client = setupSyncClient(endpoint, serviceVersion, apiKey, timeout, maxRetries, proxyOptions, logRequestsAndResponses, userAgentSuffix);
+        this(deploymentName, dimensions);
+        this.client = setupSyncClient(endpoint, serviceVersion, apiKey, timeout, maxRetries, proxyOptions, logRequestsAndResponses, userAgentSuffix, customHeaders);
     }
 
-    public AzureAiEmbeddingModel(String endpoint,
-                                     String serviceVersion,
-                                     KeyCredential keyCredential,
-                                     String deploymentName,
-                                     Tokenizer tokenizer,
-                                     Duration timeout,
-                                     Integer maxRetries,
-                                     ProxyOptions proxyOptions,
-                                     boolean logRequestsAndResponses,
-                                     String userAgentSuffix) {
+    public AzureAiEmbeddingModel(
+         String endpoint,
+         String serviceVersion,
+         KeyCredential keyCredential,
+         String deploymentName,
+         Duration timeout,
+         Integer maxRetries,
+         ProxyOptions proxyOptions,
+         boolean logRequestsAndResponses,
+         String userAgentSuffix,
+         Integer dimensions,
+         Map<String, String> customHeaders) {
 
-        this(deploymentName, tokenizer);
-        this.client = setupSyncClient(endpoint, serviceVersion, keyCredential, timeout, maxRetries, proxyOptions, logRequestsAndResponses, userAgentSuffix);
+        this(deploymentName, dimensions);
+        this.client = setupSyncClient(endpoint, serviceVersion, keyCredential, timeout, maxRetries, proxyOptions, logRequestsAndResponses, userAgentSuffix, customHeaders);
     }
 
-    public AzureAiEmbeddingModel(String endpoint,
-                                     String serviceVersion,
-                                     TokenCredential tokenCredential,
-                                     String deploymentName,
-                                     Tokenizer tokenizer,
-                                     Duration timeout,
-                                     Integer maxRetries,
-                                     ProxyOptions proxyOptions,
-                                     boolean logRequestsAndResponses,
-                                     String userAgentSuffix) {
+    public AzureAiEmbeddingModel(
+        String endpoint,
+        String serviceVersion,
+        TokenCredential tokenCredential,
+        String deploymentName,
+        Duration timeout,
+        Integer maxRetries,
+        ProxyOptions proxyOptions,
+        boolean logRequestsAndResponses,
+        String userAgentSuffix,
+        Integer dimensions,
+        Map<String, String> customHeaders) {
 
-        this(deploymentName, tokenizer);
-        this.client = setupSyncClient(endpoint, serviceVersion, tokenCredential, timeout, maxRetries, proxyOptions, logRequestsAndResponses, userAgentSuffix);
+        this(deploymentName, dimensions);
+        this.client = setupSyncClient(endpoint, serviceVersion, tokenCredential, timeout, maxRetries, proxyOptions, logRequestsAndResponses, userAgentSuffix, customHeaders);
     }
 
     private AzureAiEmbeddingModel(String deploymentName,
-                                      Tokenizer tokenizer) {
+                                      Integer dimensions) {
 
         this.deploymentName = getOrDefault(deploymentName, TEXT_EMBEDDING_ADA_002.modelName());
-        this.tokenizer = getOrDefault(tokenizer, AzureAiTokenizer::new);
+        this.dimensions = dimensions;
     }
 
     /**
@@ -138,15 +141,6 @@ public class AzureAiEmbeddingModel extends DimensionAwareEmbeddingModel implemen
         );
     }
 
-    @Override
-    public int estimateTokenCount(String text) {
-        return tokenizer.estimateTokenCountInText(text);
-    }
-
-    @Override
-    public int estimateTokenCount(List<ChatMessage> messages) {
-        return tokenizer.estimateTokenCountInMessages(messages);
-    }
 
     public static Builder builder() {
         for (AzureAiEmbeddingModelBuilderFactory factory : loadFactories(AzureAiEmbeddingModelBuilderFactory.class)) {
@@ -157,6 +151,8 @@ public class AzureAiEmbeddingModel extends DimensionAwareEmbeddingModel implemen
 
     @Override
     protected Integer knownDimension() {
+        if(dimensions != null)
+            return dimensions;
         return AzureAiEmbeddingModelName.knownDimension(deploymentName);
     }
 
@@ -168,13 +164,14 @@ public class AzureAiEmbeddingModel extends DimensionAwareEmbeddingModel implemen
         private KeyCredential keyCredential;
         private TokenCredential tokenCredential;
         private String deploymentName;
-        private Tokenizer tokenizer;
         private Duration timeout;
         private Integer maxRetries;
         private ProxyOptions proxyOptions;
         private boolean logRequestsAndResponses;
         private OpenAIClient openAIClient;
         private String userAgentSuffix;
+        private Integer dimensions;
+        private Map<String, String> customHeaders;
 
         /**
          * Sets the Azure OpenAI endpoint. This is a mandatory parameter.
@@ -244,11 +241,6 @@ public class AzureAiEmbeddingModel extends DimensionAwareEmbeddingModel implemen
             return this;
         }
 
-        public Builder tokenizer(Tokenizer tokenizer) {
-            this.tokenizer = tokenizer;
-            return this;
-        }
-
         public Builder timeout(Duration timeout) {
             this.timeout = timeout;
             return this;
@@ -285,6 +277,16 @@ public class AzureAiEmbeddingModel extends DimensionAwareEmbeddingModel implemen
             return this;
         }
 
+        public Builder dimensions(Integer dimensions){
+            this.dimensions = dimensions;
+            return this;
+        }
+
+        public Builder customHeaders(Map<String, String> customHeaders) {
+            this.customHeaders = customHeaders;
+            return this;
+        }
+
         public AzureAiEmbeddingModel build() {
             if (openAIClient == null) {
                 if (tokenCredential != null) {
@@ -293,12 +295,13 @@ public class AzureAiEmbeddingModel extends DimensionAwareEmbeddingModel implemen
                             serviceVersion,
                             tokenCredential,
                             deploymentName,
-                            tokenizer,
                             timeout,
                             maxRetries,
                             proxyOptions,
                             logRequestsAndResponses,
-                            userAgentSuffix
+                            userAgentSuffix,
+                            dimensions,
+                            customHeaders
                     );
                 } else if (keyCredential != null) {
                     return new AzureAiEmbeddingModel(
@@ -306,12 +309,13 @@ public class AzureAiEmbeddingModel extends DimensionAwareEmbeddingModel implemen
                             serviceVersion,
                             keyCredential,
                             deploymentName,
-                            tokenizer,
                             timeout,
                             maxRetries,
                             proxyOptions,
                             logRequestsAndResponses,
-                            userAgentSuffix
+                            userAgentSuffix,
+                            dimensions,
+                            customHeaders
                     );
                 }
                 return new AzureAiEmbeddingModel(
@@ -319,18 +323,19 @@ public class AzureAiEmbeddingModel extends DimensionAwareEmbeddingModel implemen
                         serviceVersion,
                         apiKey,
                         deploymentName,
-                        tokenizer,
                         timeout,
                         maxRetries,
                         proxyOptions,
                         logRequestsAndResponses,
-                        userAgentSuffix
+                        userAgentSuffix,
+                        dimensions,
+                        customHeaders
                 );
             } else {
                 return new AzureAiEmbeddingModel(
                         openAIClient,
                         deploymentName,
-                        tokenizer
+                        dimensions
                 );
             }
         }

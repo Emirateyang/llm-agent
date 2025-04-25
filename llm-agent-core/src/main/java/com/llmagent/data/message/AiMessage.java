@@ -174,6 +174,11 @@ public class AiMessage implements ChatMessage {
         return from(toolExecutionRequests);
     }
 
+    public static AiMessage aiMessage(String text, List<ToolRequest> toolExecutionRequests) {
+        return from(text, toolExecutionRequests);
+    }
+
+
     public String getConversationId() {
         return conversationId;
     }

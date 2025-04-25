@@ -8,8 +8,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
+import static java.util.Collections.*;
 
 public class ObjectUtil {
 
@@ -77,6 +76,22 @@ public class ObjectUtil {
         }
 
         return unmodifiableList(list);
+    }
+
+    /**
+     * Returns an (unmodifiable) copy of the provided set.
+     * Returns <code>null</code> if the provided set is <code>null</code>.
+     *
+     * @param set The set to copy.
+     * @param <T>  Generic type of the set.
+     * @return The copy of the provided set.
+     */
+    public static <T> Set<T> copyIfNotNull(Set<T> set) {
+        if (set == null) {
+            return null;
+        }
+
+        return unmodifiableSet(set);
     }
 
     public static boolean isJsonInteger(Class<?> type) {
