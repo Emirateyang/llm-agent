@@ -3,9 +3,11 @@ package com.llmagent.dify;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.llmagent.data.message.AiMessage;
+import com.llmagent.dify.chat.DifyChatResponseMetadata;
 import com.llmagent.dify.chat.DifyStreamingChatCompletionResponse;
 import com.llmagent.dify.chat.DifyUsage;
 import com.llmagent.dify.chat.RetrieverResource;
+import com.llmagent.llm.chat.response.ChatResponse;
 import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.llm.output.RetrieverResources;
 import com.llmagent.llm.output.TokenUsage;
@@ -16,7 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
+import static com.llmagent.util.StringUtil.isNullOrBlank;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -28,15 +32,13 @@ public class DifyStreamingResponseBuilder {
 
     private final StringBuffer contentBuilder = new StringBuffer();
 
-    private final StringBuffer toolNameBuilder = new StringBuffer();
-    private final StringBuffer toolArgumentsBuilder = new StringBuffer();
-
     private final Map<String, ToolRequestBuilder> indexToToolExecutionRequestBuilder = new ConcurrentHashMap<>();
 
-    private DifyUsage usage;
+    private final AtomicReference<String> id = new AtomicReference<>();
+    private final AtomicReference<TokenUsage> tokenUsage = new AtomicReference<>();
+    private final AtomicReference<String> conversationId = new AtomicReference<>();
     private List<RetrieverResource> retrieverResources;
 
-    private String conversationId = "";
 
     public DifyStreamingResponseBuilder() {
     }
@@ -44,6 +46,10 @@ public class DifyStreamingResponseBuilder {
     public void append(DifyStreamingChatCompletionResponse partialResponse) {
         if (partialResponse == null) {
             return;
+        }
+
+        if (!isNullOrBlank(partialResponse.id())) {
+            this.id.set(partialResponse.id());
         }
 
         String event = partialResponse.getEvent();
@@ -56,8 +62,9 @@ public class DifyStreamingResponseBuilder {
         }
 
         if ("message_end".equals(event)) {
-            conversationId = partialResponse.getConversationId();
-            usage = partialResponse.getMetadata().getUsage();
+            this.conversationId.set(partialResponse.getConversationId());
+            DifyUsage usage = partialResponse.getMetadata().getUsage();
+            this.tokenUsage.set(tokenUsageFrom(usage));
             if (partialResponse.getMetadata().getRetrieverResources() != null) {
                 retrieverResources = partialResponse.getMetadata().getRetrieverResources();
             }
@@ -81,23 +88,70 @@ public class DifyStreamingResponseBuilder {
                     toolRequestBuilder.argumentsBuilder.append(jsonObject.getAsJsonObject(t).toString());
                     toolRequestBuilder.observationBuilder.append(partialResponse.getObservation());
                 }
-                conversationId = partialResponse.getConversationId();
+                this.conversationId.set(partialResponse.getConversationId());
             }
         }
     }
 
-    public LlmResponse<AiMessage> build() {
+//    public LlmResponse<AiMessage> build() {
+//        List<ToolRequest> toolRequests = null;
+//        if (!indexToToolExecutionRequestBuilder.isEmpty()) {
+//            toolRequests = indexToToolExecutionRequestBuilder.values().stream()
+//                    .map(it -> {
+//                                ToolRequest toolRequest = ToolRequest.builder()
+//                                .id(it.idBuilder.toString())
+//                                .name(it.nameBuilder.toString())
+//                                .arguments(it.argumentsBuilder.toString())
+//                                .build();
+//                                toolRequest.setObservation(it.observationBuilder.toString());
+//                                return toolRequest;
+//                    })
+//                    .collect(toList());
+//        }
+//
+//        String content = contentBuilder.toString();
+//        if (StringUtil.hasText(content) && toolRequests == null) {
+//            AiMessage aiMessage = AiMessage.from(content);
+//            aiMessage.setConversationId(conversationId);
+//            return LlmResponse.from(aiMessage,
+//                    tokenUsageFrom(usage),
+//                    retrieverResourceFrom(retrieverResources));
+//        } else if (StringUtil.hasText(content) && toolRequests != null) {
+//            AiMessage aiMessage = AiMessage.from(content, toolRequests);
+//            aiMessage.setConversationId(conversationId);
+//            return LlmResponse.from(aiMessage,
+//                    tokenUsageFrom(usage),
+//                    retrieverResourceFrom(retrieverResources));
+//        } else if (StringUtil.noText(content) && toolRequests != null) {
+//            AiMessage aiMessage = AiMessage.from(toolRequests);
+//            aiMessage.setConversationId(conversationId);
+//            return LlmResponse.from(aiMessage,
+//                    tokenUsageFrom(usage),
+//                    retrieverResourceFrom(retrieverResources));
+//        }
+//
+//        return null;
+//    }
+
+    public ChatResponse build() {
+        DifyChatResponseMetadata chatResponseMetadata = DifyChatResponseMetadata.builder()
+                .id(id.get())
+                .tokenUsage(tokenUsage.get())
+                .conversationId(conversationId.get())
+                .retrieverResources(retrieverResourceFrom(retrieverResources))
+                .build();
+
         List<ToolRequest> toolRequests = null;
         if (!indexToToolExecutionRequestBuilder.isEmpty()) {
             toolRequests = indexToToolExecutionRequestBuilder.values().stream()
                     .map(it -> {
-                                ToolRequest toolRequest = ToolRequest.builder()
+                        ToolRequest toolRequest = ToolRequest.builder()
                                 .id(it.idBuilder.toString())
                                 .name(it.nameBuilder.toString())
                                 .arguments(it.argumentsBuilder.toString())
                                 .build();
-                                toolRequest.setObservation(it.observationBuilder.toString());
-                                return toolRequest;
+                        toolRequest.setObservation(it.observationBuilder.toString());
+                        return toolRequest;
                     })
                     .collect(toList());
         }
@@ -105,22 +159,22 @@ public class DifyStreamingResponseBuilder {
         String content = contentBuilder.toString();
         if (StringUtil.hasText(content) && toolRequests == null) {
             AiMessage aiMessage = AiMessage.from(content);
-            aiMessage.setConversationId(conversationId);
-            return LlmResponse.from(aiMessage,
-                    tokenUsageFrom(usage),
-                    retrieverResourceFrom(retrieverResources));
+            return ChatResponse.builder()
+                    .aiMessage(aiMessage)
+                    .metadata(chatResponseMetadata)
+                    .build();
         } else if (StringUtil.hasText(content) && toolRequests != null) {
             AiMessage aiMessage = AiMessage.from(content, toolRequests);
-            aiMessage.setConversationId(conversationId);
-            return LlmResponse.from(aiMessage,
-                    tokenUsageFrom(usage),
-                    retrieverResourceFrom(retrieverResources));
+            return ChatResponse.builder()
+                    .aiMessage(aiMessage)
+                    .metadata(chatResponseMetadata)
+                    .build();
         } else if (StringUtil.noText(content) && toolRequests != null) {
             AiMessage aiMessage = AiMessage.from(toolRequests);
-            aiMessage.setConversationId(conversationId);
-            return LlmResponse.from(aiMessage,
-                    tokenUsageFrom(usage),
-                    retrieverResourceFrom(retrieverResources));
+            return ChatResponse.builder()
+                    .aiMessage(aiMessage)
+                    .metadata(chatResponseMetadata)
+                    .build();
         }
 
         return null;

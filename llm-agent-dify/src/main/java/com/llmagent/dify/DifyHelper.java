@@ -1,9 +1,8 @@
 package com.llmagent.dify;
 
 import com.llmagent.data.message.*;
-import com.llmagent.dify.chat.DifyChatCompletionResponse;
-import com.llmagent.dify.chat.DifyUsage;
-import com.llmagent.dify.chat.RetrieverResource;
+import com.llmagent.dify.chat.*;
+import com.llmagent.llm.chat.request.ChatRequest;
 import com.llmagent.llm.output.RetrieverResources;
 import com.llmagent.llm.output.TokenUsage;
 
@@ -60,5 +59,20 @@ public class DifyHelper {
                     retrieverResource.getContent()));
         }
         return retrieverResources;
+    }
+
+    public static DifyMessageRequest toDifyChatRequest(ChatRequest chatRequest, DifyChatRequestParameters parameters) {
+        DifyMessageRequest.Builder requestBuilder = DifyMessageRequest.builder()
+                .inputs(parameters.getInputs())
+                .query(toDifyMessage(chatRequest.messages()))
+                .responseMode(parameters.getResponseMode())
+                .conversationId(parameters.getConversationId())
+                .autoGenerateName(parameters.hasAutoGenerateName())
+                .breakOnToolCalled(parameters.hasBreakOnToolCalled())
+                .user(parameters.getUser());
+        if (parameters.getFiles() != null) {
+            requestBuilder.files(parameters.getFiles());
+        }
+        return requestBuilder.build();
     }
 }

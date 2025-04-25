@@ -33,6 +33,10 @@ public class DifyStreamingChatCompletionResponse extends DifyMessage {
 
     private DifyResponseMetadata metadata;
 
+    public String id() {
+        return id;
+    }
+
     @Override
     public int hashCode() {
         int h = 5381;

@@ -5,6 +5,7 @@ import com.llmagent.dify.DifyStreamingCompletionModelBuilderFactory;
 import com.llmagent.dify.DifyStreamingResponseBuilder;
 import com.llmagent.dify.client.DifyClient;
 import com.llmagent.llm.StreamingResponseHandler;
+import com.llmagent.llm.chat.response.ChatResponse;
 import com.llmagent.llm.completion.StreamingCompletionModel;
 import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.util.ObjectUtil;
@@ -73,7 +74,7 @@ public class DifyStreamingCompletionModel implements StreamingCompletionModel {
         this.files = files;
     }
     @Override
-    public void generate(String prompt, StreamingResponseHandler<AiMessage> handler) {
+    public void generate(String prompt, StreamingResponseHandler<String> handler) {
 
         DifyMessageRequest.Builder requestBuilder = DifyMessageRequest.builder()
                 .inputs(inputs)
@@ -100,19 +101,19 @@ public class DifyStreamingCompletionModel implements StreamingCompletionModel {
                     }
                 })
                 .onComplete(() -> {
-                    LlmResponse<AiMessage> response = createResponse(responseBuilder);
-                    handler.onComplete(response);
+                    ChatResponse chatResponse = responseBuilder.build();
+                    handler.onComplete(LlmResponse.from(
+                            chatResponse.aiMessage().content(),
+                            chatResponse.metadata().tokenUsage(),
+                            chatResponse.metadata().finishReason()
+                    ));
                 })
                 .onError(handler::onError)
                 .execute();
     }
 
-    private LlmResponse<AiMessage> createResponse(DifyStreamingResponseBuilder responseBuilder) {
-        return responseBuilder.build();
-    }
-
     private static void handle(DifyStreamingChatCompletionResponse partialResponse,
-                               StreamingResponseHandler<AiMessage> handler) {
+                               StreamingResponseHandler<String> handler) {
 
         if ("message_end".equalsIgnoreCase(partialResponse.getType())) {
             return;

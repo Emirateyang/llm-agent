@@ -2,10 +2,9 @@ package com.llmagent.dify.chat;
 
 import com.llmagent.dify.client.DifyClient;
 import com.llmagent.data.message.AiMessage;
-import com.llmagent.data.message.ChatMessage;
-import com.llmagent.dify.exception.DifyHttpException;
 import com.llmagent.llm.chat.ChatLanguageModel;
-import com.llmagent.llm.output.LlmResponse;
+import com.llmagent.llm.chat.request.ChatRequest;
+import com.llmagent.llm.chat.response.ChatResponse;
 import com.llmagent.util.ObjectUtil;
 import lombok.Builder;
 
@@ -14,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.llmagent.dify.DifyHelper.*;
-import static com.llmagent.util.RetryUtil.withRetry;
+import static com.llmagent.util.RetryUtil.withRetryMappingExceptions;
 
 public class DifyChatModel implements ChatLanguageModel {
 
@@ -67,34 +66,61 @@ public class DifyChatModel implements ChatLanguageModel {
         this.maxRetries = ObjectUtil.getOrDefault(maxRetries, 3);
     }
 
-    public static DifyChatModel withApiKey(String apiKey) {
-        return builder().apiKey(apiKey).build();
-    }
+//    @Override
+//    public LlmResponse<AiMessage> generate(List<ChatMessage> messages) {
+//
+//        DifyMessageRequest.Builder requestBuilder = DifyMessageRequest.builder()
+//                .inputs(inputs)
+//                .query(toDifyMessage(messages))
+//                .responseMode(responseMode)
+//                .conversationId(conversationId)
+//                .autoGenerateName(autoGenerateName)
+//                .user(user);
+//        if (this.files != null) {
+//            requestBuilder.files(files);
+//        }
+//
+//        DifyMessageRequest request = requestBuilder.build();
+//
+//        try {
+//            DifyChatCompletionResponse chatCompletionResponse = withRetry(() -> client.chatCompletion(request).execute(), maxRetries);
+//
+//            return LlmResponse.from(
+//                aiMessageFrom(chatCompletionResponse),
+//                tokenUsageFrom(chatCompletionResponse.getMetadata().getUsage()),
+//                retrieverResourceFrom(chatCompletionResponse.getMetadata().getRetrieverResources())
+//            );
+//        } catch (RuntimeException ex) {
+//            throw ex;
+//        }
+//    }
 
     @Override
-    public LlmResponse<AiMessage> generate(List<ChatMessage> messages) {
-
-        DifyMessageRequest.Builder requestBuilder = DifyMessageRequest.builder()
+    public ChatResponse doChat(ChatRequest chatRequest) {
+        DifyChatRequestParameters.Builder parameters = DifyChatRequestParameters.builder()
+                .user(user)
                 .inputs(inputs)
-                .query(toDifyMessage(messages))
-                .responseMode(responseMode)
                 .conversationId(conversationId)
+                .responseMode(responseMode)
                 .autoGenerateName(autoGenerateName)
-                .user(user);
-        if (this.files != null) {
-            requestBuilder.files(files);
-        }
+                .files(files);
 
-        DifyMessageRequest request = requestBuilder.build();
+
+        DifyMessageRequest difyRequest = toDifyChatRequest(chatRequest, parameters.build());
 
         try {
-            DifyChatCompletionResponse chatCompletionResponse = withRetry(() -> client.chatCompletion(request).execute(), maxRetries);
+            DifyChatCompletionResponse chatCompletionResponse = withRetryMappingExceptions(() -> client.chatCompletion(difyRequest).execute(), maxRetries);
+            DifyChatResponseMetadata chatResponseMetadata = DifyChatResponseMetadata.builder()
+                    .tokenUsage(tokenUsageFrom(chatCompletionResponse.getMetadata().getUsage()))
+                    .conversationId(chatCompletionResponse.getConversationId())
+                    .retrieverResources(retrieverResourceFrom(chatCompletionResponse.getMetadata().getRetrieverResources()))
+                    .build();
 
-            return LlmResponse.from(
-                aiMessageFrom(chatCompletionResponse),
-                tokenUsageFrom(chatCompletionResponse.getMetadata().getUsage()),
-                retrieverResourceFrom(chatCompletionResponse.getMetadata().getRetrieverResources())
-            );
+            AiMessage aiMessage = aiMessageFrom(chatCompletionResponse);
+            return ChatResponse.builder()
+                    .aiMessage(aiMessage)
+                    .metadata(chatResponseMetadata)
+                    .build();
         } catch (RuntimeException ex) {
             throw ex;
         }
