@@ -1,16 +1,14 @@
 package com.llmagent.llm.tool;
 
+import com.llmagent.llm.chat.request.json.JsonObjectSchema;
 import com.llmagent.util.StringUtil;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class ToolSpecification {
     private final String name;
     private final String description;
-    private final ToolParameters parameters;
+    private final JsonObjectSchema parameters;
 
     /**
      * Creates a {@link ToolSpecification} from a {@link Builder}.
@@ -42,7 +40,7 @@ public class ToolSpecification {
      * Returns the parameters of the tool.
      * @return the parameters of the tool.
      */
-    public ToolParameters parameters() {
+    public JsonObjectSchema parameters() {
         return parameters;
     }
 
@@ -92,7 +90,7 @@ public class ToolSpecification {
 
         private String name;
         private String description;
-        private ToolParameters parameters;
+        private JsonObjectSchema parameters;
 
         /**
          * Creates a {@link Builder}.
@@ -125,60 +123,8 @@ public class ToolSpecification {
          * @param parameters the {@code parameters}
          * @return {@code this}
          */
-        public Builder parameters(ToolParameters parameters) {
+        public Builder parameters(JsonObjectSchema parameters) {
             this.parameters = parameters;
-            return this;
-        }
-
-        /**
-         * Adds a parameter to the tool.
-         * @param name the name of the parameter.
-         * @param schemaProperties the properties of the parameter.
-         * @return {@code this}
-         */
-        public Builder addParameter(String name, SchemaProperty... schemaProperties) {
-            return addParameter(name, Arrays.asList(schemaProperties));
-        }
-
-        /**
-         * Adds a parameter to the tool.
-         * @param name the name of the parameter.
-         * @param schemaProperties the properties of the parameter.
-         * @return {@code this}
-         */
-        public Builder addParameter(String name, Iterable<SchemaProperty> schemaProperties) {
-            addOptionalParameter(name, schemaProperties);
-            this.parameters.required().add(name);
-            return this;
-        }
-
-        /**
-         * Adds an optional parameter to the tool.
-         * @param name the name of the parameter.
-         * @param schemaProperties the properties of the parameter.
-         * @return {@code this}
-         */
-        public Builder addOptionalParameter(String name, SchemaProperty... schemaProperties) {
-            return addOptionalParameter(name, Arrays.asList(schemaProperties));
-        }
-
-        /**
-         * Adds an optional parameter to the tool.
-         * @param name the name of the parameter.
-         * @param schemaProperties the properties of the parameter.
-         * @return {@code this}
-         */
-        public Builder addOptionalParameter(String name, Iterable<SchemaProperty> schemaProperties) {
-            if (this.parameters == null) {
-                this.parameters = ToolParameters.builder().build();
-            }
-
-            Map<String, Object> schemaPropertiesMap = new HashMap<>();
-            for (SchemaProperty schemaProperty : schemaProperties) {
-                schemaPropertiesMap.put(schemaProperty.key(), schemaProperty.value());
-            }
-
-            this.parameters.properties().put(name, schemaPropertiesMap);
             return this;
         }
 

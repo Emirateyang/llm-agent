@@ -28,7 +28,6 @@ import com.llmagent.llm.chat.response.ResponseFormatType;
 import com.llmagent.llm.output.FinishReason;
 import com.llmagent.llm.output.LlmResponse;
 import com.llmagent.llm.output.TokenUsage;
-import com.llmagent.llm.tool.ToolParameters;
 import com.llmagent.llm.tool.ToolRequest;
 import com.llmagent.llm.tool.ToolSpecification;
 import org.slf4j.Logger;
@@ -236,12 +235,12 @@ public class AzureAiHelper {
         NO_PARAMETER_DATA.put("properties", new HashMap<>());
     }
 
-    private static BinaryData toOpenAiParameters(ToolParameters toolParameters) {
+    private static BinaryData toOpenAiParameters(JsonObjectSchema toolParameters) {
         Parameters parameters = new Parameters();
         if (toolParameters == null) {
             return BinaryData.fromObject(NO_PARAMETER_DATA);
         }
-        parameters.setProperties(toolParameters.properties());
+        parameters.setProperties(toMap(toolParameters.properties()));
         parameters.setRequired(toolParameters.required());
         return BinaryData.fromObject(parameters);
     }

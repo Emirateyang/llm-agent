@@ -1,18 +1,30 @@
 package com.llmagent.openai.tool;
 
-import com.llmagent.llm.tool.SchemaProperty;
-import com.llmagent.llm.tool.ToolParameters;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+@JsonDeserialize(builder = Function.Builder.class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class Function {
 
+    @JsonProperty
     private final String name;
+    @JsonProperty
     private final String description;
+    @JsonProperty
     private final Boolean strict;
-    private final ToolParameters parameters;
+    @JsonProperty
+    private final Map<String, Object> parameters;
 
     private Function(Builder builder) {
         this.name = builder.name;
@@ -29,7 +41,7 @@ public class Function {
         return description;
     }
 
-    public ToolParameters parameters() {
+    public Map<String, Object> parameters() {
         return parameters;
     }
 
@@ -75,12 +87,15 @@ public class Function {
         return new Builder();
     }
 
+    @JsonPOJOBuilder(withPrefix = "")
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static final class Builder {
 
         private String name;
         private String description;
         private Boolean strict;
-        private ToolParameters parameters;
+        private Map<String, Object> parameters = new HashMap<>();
 
         private Builder() {
         }
@@ -100,28 +115,8 @@ public class Function {
             return this;
         }
 
-        public Builder parameters(ToolParameters parameters) {
+        public Builder parameters(Map<String, Object> parameters) {
             this.parameters = parameters;
-            return this;
-        }
-
-        public Builder addParameter(String name, SchemaProperty... jsonSchemaProperties) {
-            addOptionalParameter(name, jsonSchemaProperties);
-            this.parameters.required().add(name);
-            return this;
-        }
-
-        public Builder addOptionalParameter(String name, SchemaProperty... schemaProperties) {
-            if (this.parameters == null) {
-                this.parameters = ToolParameters.builder().build();
-            }
-
-            Map<String, Object> schemaPropertiesMap = new HashMap<>();
-            for (SchemaProperty schemaProperty : schemaProperties) {
-                schemaPropertiesMap.put(schemaProperty.key(), schemaProperty.value());
-            }
-
-            this.parameters.properties().put(name, schemaPropertiesMap);
             return this;
         }
 

@@ -1,7 +1,10 @@
 package com.llmagent.llm.tool;
 
+import com.llmagent.data.message.UserMessage;
+import com.llmagent.llm.memory.MemoryId;
+
 /**
- * A tool provider. It is called each time the AI service is called and supplies tools for that specific call.
+ * A tool provider. It is called each time the LLM service is called and supplies tools for that specific call.
  * <p>
  * Tools returned in {@link ToolProviderResult} will be included in the request to the LLM.
  **/

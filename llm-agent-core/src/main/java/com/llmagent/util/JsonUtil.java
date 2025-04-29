@@ -5,6 +5,7 @@ import com.llmagent.json.JsonCodecFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 
 import static com.llmagent.util.ServiceHelper.loadFactories;
 
@@ -34,6 +35,16 @@ public class JsonUtil {
          * @return the object.
          */
         <T> T fromJson(String json, Class<T> type);
+
+        /**
+         * Convert the given JSON string to an object of the given type.
+         *
+         * @param json the JSON string.
+         * @param type the type of the object.
+         * @param <T>  the type of the object.
+         * @return the object.
+         */
+        <T> T fromJson(String json, Type type);
 
         /**
          * Convert the given object to an {@link InputStream}.
@@ -74,6 +85,18 @@ public class JsonUtil {
      * @return the object.
      */
     public static <T> T fromJson(String json, Class<T> type) {
+        return CODEC.fromJson(json, type);
+    }
+
+    /**
+     * Convert the given JSON string to an object of the given type.
+     *
+     * @param json the JSON string.
+     * @param type the type of the object.
+     * @param <T>  the type of the object.
+     * @return the object.
+     */
+    public static <T> T fromJson(String json, Type type) {
         return CODEC.fromJson(json, type);
     }
 

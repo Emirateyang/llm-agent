@@ -26,8 +26,7 @@ import com.llmagent.openai.token.Usage;
 import com.llmagent.openai.tool.*;
 import com.llmagent.openai.tool.Tool;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static com.llmagent.exception.Exceptions.illegalArgument;
 import static com.llmagent.llm.chat.request.json.JsonSchemaElementHelper.toMap;
@@ -153,21 +152,27 @@ public class OpenAiHelper {
         Function function = Function.builder()
                 .name(toolSpecification.name())
                 .description(toolSpecification.description())
-                .strict(strict)
-                .parameters(toolSpecification.parameters())
+                .parameters(toOpenAiParameters(toolSpecification.parameters(), strict))
                 .build();
         return Tool.from(function);
     }
 
-//    private static com.llmagent.openai.chat.Parameters toOpenAiParameters(ToolParameters toolParameters) {
-//        if (toolParameters == null) {
-//            return com.llmagent.openai.chat.Parameters.builder().build();
-//        }
-//        return com.llmagent.openai.chat.Parameters.builder()
-//                .properties(toolParameters.properties())
-//                .required(toolParameters.required())
-//                .build();
-//    }
+    private static Map<String, Object> toOpenAiParameters(JsonObjectSchema parameters, boolean strict) {
+        if (parameters != null) {
+            return toMap(parameters, strict);
+        } else {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("type", "object");
+            map.put("properties", new HashMap<>());
+            map.put("required", new ArrayList<>());
+            if (strict) {
+                // When strict, additionalProperties must be false:
+                // See https://platform.openai.com/docs/guides/structured-outputs/additionalproperties-false-must-always-be-set-in-objects?api-mode=chat#additionalproperties-false-must-always-be-set-in-objects
+                map.put("additionalProperties", false);
+            }
+            return map;
+        }
+    }
 
     public static AiMessage aiMessageFrom(ChatCompletionResponse response) {
         AssistantMessage assistantMessage = response.choices().get(0).message();
