@@ -24,6 +24,9 @@ public class McpHelper {
         return new McpSchema.CallToolRequest(request.name(), request.arguments());
     }
 
+    /**
+     * Converts the 'tools' element (inside the 'ListToolsResult' type in the MCP schema) into ${@link ToolSpecification}
+     */
     static List<ToolSpecification> toToolSpecifications(McpSchema.ListToolsResult listToolsResult) {
         List<ToolSpecification> toolSpecifications = new ArrayList<>();
         for (McpSchema.Tool tool : listToolsResult.tools()) {
@@ -190,22 +193,20 @@ public class McpHelper {
             throw new McpException("Tool execution returned null result");
         }
 
-        // 检查是否是错误结果
+        // check whether the result has an error
         if (Boolean.TRUE.equals(result.isError())) {
-            // 如果是错误，处理内容作为错误信息
             StringBuilder errorMessage = new StringBuilder("Tool execution failed: ");
             if (result.content() != null && !result.content().isEmpty()) {
-                // 尝试从内容中提取文本错误信息
+                // Try to extract text error information from the content
                 String contentDetails = result.content().stream()
                         .map(content -> {
                             if (content instanceof McpSchema.TextContent textContent) {
                                 return textContent.text();
                             } else {
-                                // 对于非文本内容，可以简单标记一下
                                 return "[" + content.type() + " content]";
                             }
                         })
-                        .collect(Collectors.joining("\n")); // 用换行符分隔不同内容项
+                        .collect(Collectors.joining("\n"));
 
                 if (!contentDetails.trim().isEmpty()) {
                     errorMessage.append(contentDetails);
@@ -216,40 +217,35 @@ public class McpHelper {
                 errorMessage.append("No error content provided.");
             }
 
-            // 通常情况下，工具执行失败应该通过异常来向上层系统通知
+            // In general, tool execution failures should be notified to the upper through exceptions.
             throw new McpException(errorMessage.toString().trim());
-
         } else {
-            // 如果执行成功，处理内容作为结果
             if (result.content() == null || result.content().isEmpty()) {
-                // 成功执行但没有返回内容
                 return "Success";
             }
 
-            // 将所有内容项转换为字符串，并拼接起来
-            // 这里我们重点处理 TextContent，并标记其他类型的内容
+            // Convert all content items to strings and concatenate them.
+            // Here, we focus on processing TextContent and mark other types of content.
             StringBuilder successContent = new StringBuilder();
             boolean first = true;
             for (McpSchema.Content content : result.content()) {
                 if (!first) {
-                    // 在不同内容项之间添加分隔符，比如换行
                     successContent.append("\n");
                 }
 
                 if (content instanceof McpSchema.TextContent textContent) {
                     successContent.append(textContent.text());
                 } else if (content instanceof McpSchema.ImageContent) {
-                    successContent.append("[Image content: ").append(content.type()).append("]"); // 可以根据 ImageContent 字段添加更多描述
+                    successContent.append("[Image content: ").append(content.type()).append("]");
                 } else if (content instanceof McpSchema.EmbeddedResource) {
-                    successContent.append("[Resource content: ").append(content.type()).append("]"); // 可以根据 EmbeddedResource 字段添加更多描述
+                    successContent.append("[Resource content: ").append(content.type()).append("]");
                 } else {
-                    // 处理未知的内容类型（如果密封接口定义完整，理论上不会到这里）
                     successContent.append("[Unknown content type: ").append(content.type()).append("]");
                 }
                 first = false;
             }
 
-            return successContent.toString().trim(); // trim() 移除可能的末尾换行符
+            return successContent.toString().trim();
         }
     }
 }
