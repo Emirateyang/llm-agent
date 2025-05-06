@@ -31,7 +31,7 @@ public class McpToolProvider implements ToolProvider {
         ToolProviderResult.Builder builder = ToolProviderResult.builder();
         for (McpClient mcpClient : mcpClients) {
             try {
-                McpSchema.ListToolsResult listToolsResult = mcpClient.listTools().block();
+                McpSchema.ListToolsResult listToolsResult = mcpClient.initialize().then(mcpClient.listTools()).block();
                 ensureNotNull(listToolsResult, "Failed to retrieve tools from MCP server");
                 List<ToolSpecification> toolSpecifications = toToolSpecifications(listToolsResult);
                 for (ToolSpecification toolSpecification : toolSpecifications) {
