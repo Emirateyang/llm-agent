@@ -54,7 +54,7 @@ public class LlmServiceTokenStream implements TokenStream {
         this.toolExecutors = copy(parameters.toolExecutors());
         this.retrievedContents = copy(parameters.retrievedContents());
         this.context = ensureNotNull(parameters.context(), "context");
-        ensureNotNull(this.context.streamingChatModel, "streamingChatModel");
+        ensureNotNull(this.context.streamingChatModel, "streamingChatLanguageModel");
         this.memoryId = ensureNotNull(parameters.memoryId(), "memoryId");
     }
 

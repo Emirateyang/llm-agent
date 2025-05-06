@@ -61,7 +61,7 @@ public class DefaultLlmService<T> extends LlmService<T> {
     }
 
     public T build() {
-        performBasicValidation();
+        basicValidation();
 
         if (!context.hasChatMemory() && ChatMemoryAccess.class.isAssignableFrom(context.llmServiceClass)) {
             throw illegalConfiguration(

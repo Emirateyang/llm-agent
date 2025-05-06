@@ -24,6 +24,46 @@ import static java.util.Arrays.asList;
  * You can define your own API (a Java interface with one or more methods),
  * and {@code LlmService} will provide an implementation for it, hiding all the complexity from you.
  * <p>
+ * Here is the simplest example of an LLM Service:
+ *
+ * <pre>
+ * interface Bot {
+ *     String chat(String userMessage);
+ * }
+ *
+ * Bot bot = LlmService.create(Bot.class, model);
+ *
+ * String answer = bot.chat("hello");
+ * </pre>
+ *
+ * <p>
+ * Here is the stream response example of an LLM Service:
+ *
+ * <pre>
+ *
+ *  interface Bot {
+ *     TokenStream chat(String userMessage);
+ * }
+ *
+ * StreamingChatModel model = OpenAiStreamingChatModel.builder()
+ *     .apiKey("Your OPENAI_API_KEY"))
+ *     .modelName(GPT_4_O_MINI)
+ *     .build();
+ *
+ * Bot bot = LlmService.create(Bot.class, model);
+ *
+ * TokenStream tokenStream = bot.chat("Tell me a joke");
+ *
+ * tokenStream.onPartialResponse((String partialResponse) -> System.out.println(partialResponse))
+ *     .onRetrieved((List<Content> contents) -> System.out.println(contents))
+ *     .onToolExecuted((ToolExecution toolExecution) -> System.out.println(toolExecution))
+ *     .onCompleteResponse((ChatResponse response) -> System.out.println(response))
+ *     .onError((Throwable error) -> error.printStackTrace())
+ *     .start();
+ *
+ * </pre>
+ *
+ * @param <T> The interface for which LlmService will provide an implementation.
  */
 public abstract class LlmService<T> {
 
@@ -44,6 +84,22 @@ public abstract class LlmService<T> {
      */
     public static <T> T create(Class<T> llmService, ChatLanguageModel chatModel) {
         return builder(llmService).chatModel(chatModel).build();
+    }
+
+    /**
+     * Creates an LLM Service (an implementation of the provided interface), that is backed by the provided streaming chat model.
+     * This convenience method can be used to create simple LLM Services.
+     * For more complex cases, please use {@link #builder}.
+     *
+     * @param aiService                  The class of the interface to be implemented.
+     * @param streamingChatModel The streaming chat model to be used under the hood.
+     *                                   The return type of all methods should be {@link TokenStream}.
+     * @return An instance of the provided interface, implementing all its defined methods.
+     */
+    public static <T> T create(Class<T> aiService, StreamingChatLanguageModel streamingChatModel) {
+        return builder(aiService)
+                .streamingChatModel(streamingChatModel)
+                .build();
     }
 
     /**
@@ -102,7 +158,7 @@ public abstract class LlmService<T> {
      *                              the value of memory ID is "default".
      *                              The returned {@link String} can be either a complete system message
      *                              or a system message template containing unresolved template variables (e.g. "{{name}}"),
-     *                              which will be resolved using the values of method parameters annotated with @{@link V}.
+     *                              which will be resolved using the values of method parameters annotated with @{@link PromptVariable}.
      * @return builder
      */
     public LlmService<T> systemMessageProvider(Function<Object, String> systemMessageProvider) {
@@ -226,7 +282,7 @@ public abstract class LlmService<T> {
      */
     public abstract T build();
 
-    protected void performBasicValidation() {
+    protected void basicValidation() {
         if (context.chatModel == null && context.streamingChatModel == null) {
             throw illegalConfiguration("Please specify either chatLanguageModel or streamingLanguageChatModel");
         }
