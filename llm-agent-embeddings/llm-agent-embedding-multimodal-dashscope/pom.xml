@@ -9,32 +9,37 @@
         <version>1.0.0-beta.8</version>
     </parent>
 
-    <artifactId>llm-agent-embedding</artifactId>
+    <artifactId>llm-agent-embedding-multimodal-dashscope</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <onnxruntime.version>1.21.0</onnxruntime.version>
-        <ai.djl.version>0.32.0</ai.djl.version>
+        <retrofit.version>2.11.0</retrofit.version>
     </properties>
 
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>com.microsoft.onnxruntime</groupId>-->
-<!--            <artifactId>onnxruntime</artifactId>-->
-<!--            <version>${onnxruntime.version}</version>-->
-<!--            <classifier>sources</classifier>-->
-<!--        </dependency>-->
         <dependency>
-            <groupId>com.microsoft.onnxruntime</groupId>
-            <artifactId>onnxruntime</artifactId>
-            <version>${onnxruntime.version}</version>
+            <groupId>fun.krinsiman.llm</groupId>
+            <artifactId>llm-agent-embedding</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>ai.djl.huggingface</groupId>
-            <artifactId>tokenizers</artifactId>
-            <version>${ai.djl.version}</version>
+            <groupId>com.squareup.retrofit2</groupId>
+            <artifactId>retrofit</artifactId>
+            <version>${retrofit.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.retrofit2</groupId>
+            <artifactId>converter-gson</artifactId>
+            <version>${retrofit.version}</version>
+            <exclusions>
+                <!-- Due to CVE-2022-25647 and CVE-2020-15250 vulnerabilities -->
+                <exclusion>
+                    <groupId>com.google.code.gson</groupId>
+                    <artifactId>gson</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

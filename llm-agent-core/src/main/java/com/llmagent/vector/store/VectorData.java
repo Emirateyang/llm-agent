@@ -95,7 +95,7 @@ public class VectorData {
 
     @Override
     public String toString() {
-        return "Embedding {" +
+        return "VectorData {" +
                 " vector = " + Arrays.toString(vector) +
                 " }";
     }

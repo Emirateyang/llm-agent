@@ -13,6 +13,7 @@ public class LlmResponse<T> {
 
     private final T content;
     private final TokenUsage tokenUsage;
+    private final MultimodalTokenUsage multimodalTokenUsage;
     private final FinishReason finishReason;
 
     private final List<RetrieverResources> retrieverResources;
@@ -25,7 +26,15 @@ public class LlmResponse<T> {
      * @param content the content to wrap.
      */
     public LlmResponse(T content) {
-        this(content, null, null,null);
+        this(content, null, null, null,null);
+    }
+
+    public LlmResponse(T content, TokenUsage tokenUsage, FinishReason finishReason, List<RetrieverResources> retrieverResources, MultimodalTokenUsage multimodalTokenUsage) {
+        this.content = content;
+        this.tokenUsage = tokenUsage;
+        this.finishReason = finishReason;
+        this.retrieverResources = retrieverResources;
+        this.multimodalTokenUsage = multimodalTokenUsage;
     }
 
     /**
@@ -36,10 +45,18 @@ public class LlmResponse<T> {
      * @param finishReason the finish reason, or {@code null}.
      */
     public LlmResponse(T content, TokenUsage tokenUsage, FinishReason finishReason, List<RetrieverResources> retrieverResources) {
-        this.content = content;
-        this.tokenUsage = tokenUsage;
-        this.finishReason = finishReason;
-        this.retrieverResources = retrieverResources;
+        this(content, tokenUsage, finishReason, retrieverResources, null);
+    }
+
+    /**
+     * Create a new Response.
+     *
+     * @param content the content to wrap.
+     * @param tokenUsage the token usage statistics, or {@code null}.
+     * @param finishReason the finish reason, or {@code null}.
+     */
+    public LlmResponse(T content, MultimodalTokenUsage tokenUsage, FinishReason finishReason, List<RetrieverResources> retrieverResources) {
+        this(content, null, finishReason, retrieverResources, tokenUsage);
     }
 
     /**
@@ -129,5 +146,9 @@ public class LlmResponse<T> {
 
     public static <T> LlmResponse<T> from(T content, TokenUsage tokenUsage, List<RetrieverResources> retrieverResources) {
         return new LlmResponse<>(content, tokenUsage, null, retrieverResources);
+    }
+
+    public static <T> LlmResponse<T> from(T content, MultimodalTokenUsage tokenUsage) {
+        return new LlmResponse<>(content, tokenUsage, null, null);
     }
 }

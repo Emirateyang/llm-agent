@@ -6,7 +6,7 @@
 
     <groupId>fun.krinsiman.llm</groupId>
     <artifactId>llm-agent-embeddings</artifactId>
-    <version>1.0.0-beta.7</version>
+    <version>1.0.0-beta.8</version>
     <packaging>pom</packaging>
 
     <name>llm-agent-embeddings</name>
@@ -15,14 +15,16 @@
     <modules>
         <module>llm-agent-embedding</module>
         <module>llm-agent-embedding-bge-m3</module>
+        <module>llm-agent-embedding-multimodal-dashscope</module>
     </modules>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <llm-agent.version>1.0.0-beta.7</llm-agent.version>
+        <llm-agent.version>1.0.0-beta.8</llm-agent.version>
         <fastjson.version>2.0.51</fastjson.version>
+        <okhttp.version>4.12.0</okhttp.version>
     </properties>
 
     <dependencies>
@@ -35,6 +37,16 @@
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
             <version>${fastjson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>${okhttp.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp-sse</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
     </dependencies>
 
