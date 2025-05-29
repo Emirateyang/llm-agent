@@ -6,11 +6,11 @@
     <parent>
         <groupId>fun.krinsiman.llm</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.0-beta.8</version>
+        <version>1.0.0-beta.9</version>
     </parent>
 
     <artifactId>llm-agent-dify</artifactId>
-    <version>1.0.0-beta.13</version>
+    <version>1.0.0-beta.14</version>
     <description>llm agent components for team who use dify</description>
 
     <properties>

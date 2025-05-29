@@ -1,4 +1,4 @@
-package com.llmagent.embedding.dashscope;
+package com.llmagent.embedding.http;
 
 import java.util.function.Consumer;
 

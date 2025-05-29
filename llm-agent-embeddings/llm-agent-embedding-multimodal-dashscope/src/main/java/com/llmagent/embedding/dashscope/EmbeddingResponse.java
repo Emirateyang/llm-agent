@@ -1,13 +1,10 @@
 package com.llmagent.embedding.dashscope;
 
-import com.llmagent.llm.output.MultimodalTokenUsage;
-import com.llmagent.vector.store.MultimodalEmbeddingOutput;
-
 import java.util.Objects;
 
 public final class EmbeddingResponse {
-    private final MultimodalEmbeddingOutput output;
-    private final MultimodalTokenUsage usage;
+    private final EmbeddingOutput output;
+    private final Usage usage;
 
     private EmbeddingResponse(Builder builder) {
         this.output = builder.output;
@@ -15,11 +12,11 @@ public final class EmbeddingResponse {
     }
 
 
-    public MultimodalEmbeddingOutput output() {
+    public EmbeddingOutput output() {
         return output;
     }
 
-    public MultimodalTokenUsage usage() {
+    public Usage usage() {
         return usage;
     }
 
@@ -58,18 +55,18 @@ public final class EmbeddingResponse {
 
     public static final class Builder {
 
-        private MultimodalEmbeddingOutput output;
-        private MultimodalTokenUsage usage;
+        private EmbeddingOutput output;
+        private Usage usage;
 
         private Builder() {
         }
 
-        public Builder output(MultimodalEmbeddingOutput output) {
+        public Builder output(EmbeddingOutput output) {
             this.output = output;
             return this;
         }
 
-        public Builder usage(MultimodalTokenUsage usage) {
+        public Builder usage(Usage usage) {
             this.usage = usage;
             return this;
         }

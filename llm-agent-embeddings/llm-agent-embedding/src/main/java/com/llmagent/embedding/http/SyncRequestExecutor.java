@@ -1,7 +1,5 @@
-package com.llmagent.embedding.dashscope;
+package com.llmagent.embedding.http;
 
-
-import com.llmagent.embedding.dashscope.exception.ExceptionUtil;
 import retrofit2.Call;
 
 import java.io.IOException;

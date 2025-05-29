@@ -1,20 +1,23 @@
-package com.llmagent.embedding.dashscope;
+package com.llmagent.embedding.doubao;
 
-import com.llmagent.embedding.dashscope.client.DefaultMultimodalEmbeddingClient;
+import com.llmagent.embedding.doubao.client.DefaultMultimodalEmbeddingClient;
 import com.llmagent.llm.output.LlmResponse;
 import lombok.Builder;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static com.llmagent.embedding.dashscope.DashscopeAiHelper.MULTI_MODAL_API_URL;
-import static com.llmagent.embedding.dashscope.DashscopeAiHelper.tokenUsageFrom;
+import static com.llmagent.embedding.doubao.DoubaoAiHelper.MULTI_MODAL_API_URL;
+import static com.llmagent.embedding.doubao.DoubaoAiHelper.tokenUsageFrom;
 import static com.llmagent.util.ObjectUtil.getOrDefault;
 import static com.llmagent.util.RetryUtil.withRetryMappingExceptions;
 import static java.time.Duration.ofSeconds;
 
 /**
- * Represents an Multimodal-Embedding model from dashscope Aliyun.
+ * Represents an Multimodal-Embedding model from Doubao.
  */
 public class MultimodalEmbeddingModel {
 
@@ -52,29 +55,31 @@ public class MultimodalEmbeddingModel {
 
     public LlmResponse<EmbeddingOutput> embedImage(String imageUrl) {
         Map<String, String> content = new HashMap<>();
-        content.put("image", imageUrl);
+        content.put("url", imageUrl);
         return embedImage(content);
     }
 
     public LlmResponse<EmbeddingOutput> embedImage(String format, String base64) {
         Map<String, String> content = new HashMap<>();
-        content.put("image", "data:image/" + format + ";base64," + base64);
+        content.put("url", "data:image/" + format + ";base64," + base64);
         return embedImage(content);
     }
 
     private LlmResponse<EmbeddingOutput> embedImage(Map<String, String> content) {
 
-        List<Map<String, String>> contents = new ArrayList<>();
-        contents.add(content);
-        Map<String, Object> input = new HashMap<>();
-        input.put("contents", contents);
+        Map<String, Object> image = new HashMap<>();
+        image.put("image_url", content);
+        image.put("type", "image_url");
 
-        EmbeddingRequest request = EmbeddingRequest.builder().input(input).
-                model(EmbeddingModelName.MULTI_MODAL_EMBEDDING_V1).build();
+        List<Map<String, Object>> contents = new ArrayList<>();
+        contents.add(image);
+
+        EmbeddingRequest request = EmbeddingRequest.builder().input(contents).
+                model(EmbeddingModelName.MULTI_MODAL_EMBEDDING_250328).build();
 
         EmbeddingResponse response = withRetryMappingExceptions(() -> client.embedding(request).execute(), maxRetries);
 
-        return LlmResponse.from(response.output(), tokenUsageFrom(response.usage()));
+        return LlmResponse.from(response.data(), tokenUsageFrom(response.usage()));
     }
 
 

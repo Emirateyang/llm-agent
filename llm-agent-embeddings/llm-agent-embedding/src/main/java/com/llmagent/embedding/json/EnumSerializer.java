@@ -1,4 +1,4 @@
-package com.llmagent.embedding.dashscope.json;
+package com.llmagent.embedding.json;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;

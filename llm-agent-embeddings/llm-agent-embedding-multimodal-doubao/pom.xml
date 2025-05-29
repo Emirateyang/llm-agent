@@ -9,32 +9,19 @@
         <version>1.0.0-beta.9</version>
     </parent>
 
-    <artifactId>llm-agent-embedding</artifactId>
+    <artifactId>llm-agent-embedding-multimodal-doubao</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <onnxruntime.version>1.21.0</onnxruntime.version>
-        <ai.djl.version>0.32.0</ai.djl.version>
     </properties>
 
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>com.microsoft.onnxruntime</groupId>-->
-<!--            <artifactId>onnxruntime</artifactId>-->
-<!--            <version>${onnxruntime.version}</version>-->
-<!--            <classifier>sources</classifier>-->
-<!--        </dependency>-->
         <dependency>
-            <groupId>com.microsoft.onnxruntime</groupId>
-            <artifactId>onnxruntime</artifactId>
-            <version>${onnxruntime.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ai.djl.huggingface</groupId>
-            <artifactId>tokenizers</artifactId>
-            <version>${ai.djl.version}</version>
+            <groupId>fun.krinsiman.llm</groupId>
+            <artifactId>llm-agent-embedding</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

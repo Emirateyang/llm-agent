@@ -1,15 +1,15 @@
-package com.llmagent.embedding.dashscope.exception;
+package com.llmagent.embedding.http;
 
 import java.io.IOException;
 
 public class ExceptionUtil {
 
     public static RuntimeException toException(retrofit2.Response<?> response) throws IOException {
-        return new DashscopeHttpException(response.code(), response.errorBody().string());
+        return new EmbeddingHttpException(response.code(), response.errorBody().string());
     }
 
     public static RuntimeException toException(okhttp3.Response response) throws IOException {
-        return new DashscopeHttpException(response.code(), response.body().string());
+        return new EmbeddingHttpException(response.code(), response.body().string());
     }
 
     public static <T> T getOrDefault(T value, T defaultValue) {

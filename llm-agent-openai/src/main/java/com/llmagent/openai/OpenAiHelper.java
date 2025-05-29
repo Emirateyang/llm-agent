@@ -35,9 +35,6 @@ import static com.llmagent.openai.ResponseFormatType.JSON_OBJECT;
 import static com.llmagent.openai.ResponseFormatType.JSON_SCHEMA;
 import static java.util.stream.Collectors.toList;
 
-/**
- * 将 LLM 消息转换为 OpenAI 消息
- */
 public class OpenAiHelper {
     static final String OPENAI_URL = "https://api.openai.com/v1";
 

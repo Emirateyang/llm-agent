@@ -1,4 +1,4 @@
-package com.llmagent.embedding.dashscope.client;
+package com.llmagent.embedding.http.header;
 
 import okhttp3.Interceptor;
 import okhttp3.Request;

@@ -1,11 +1,13 @@
-package com.llmagent.embedding.dashscope.client;
+package com.llmagent.embedding.doubao.client;
 
-import com.llmagent.embedding.dashscope.*;
-import com.llmagent.embedding.dashscope.api.DashscopeApi;
+import com.llmagent.embedding.doubao.EmbeddingRequest;
+import com.llmagent.embedding.doubao.EmbeddingResponse;
+import com.llmagent.embedding.doubao.api.DoubaoApi;
 import com.llmagent.embedding.http.RequestExecutor;
 import com.llmagent.embedding.http.SyncOrAsync;
 import com.llmagent.embedding.http.header.AuthorizationHeaderInjector;
-import okhttp3.*;
+import okhttp3.Cache;
+import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
@@ -23,7 +25,7 @@ public class DefaultMultimodalEmbeddingClient extends MultimodalEmbeddingClient 
 
     public final String baseUrl;
     private final OkHttpClient okHttpClient;
-    private final DashscopeApi dashscopeApi;
+    private final DoubaoApi doubaoApi;
 
     public DefaultMultimodalEmbeddingClient(String apiKey) {
         this(new Builder().apiKey(apiKey));
@@ -48,12 +50,12 @@ public class DefaultMultimodalEmbeddingClient extends MultimodalEmbeddingClient 
         // fastjson is not compatible with retrofit2 now, use gson instead
         // might change to fastjson in the future
         retrofitBuilder.addConverterFactory(GsonConverterFactory.create(GSON));
-        this.dashscopeApi = retrofitBuilder.build().create(DashscopeApi.class);
+        this.doubaoApi = retrofitBuilder.build().create(DoubaoApi.class);
     }
 
     @Override
     public SyncOrAsync<EmbeddingResponse> embedding(EmbeddingRequest request) {
-        return new RequestExecutor<>(dashscopeApi.embeddings(request), r -> r);
+        return new RequestExecutor<>(doubaoApi.embeddings(request), r -> r);
     }
 
     public void shutdown() {

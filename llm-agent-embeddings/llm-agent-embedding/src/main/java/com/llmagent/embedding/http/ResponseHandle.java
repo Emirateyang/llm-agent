@@ -1,4 +1,4 @@
-package com.llmagent.embedding.dashscope;
+package com.llmagent.embedding.http;
 
 /**
  * Provides a mechanism to cancel the response after a request has been initiated.

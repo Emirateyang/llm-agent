@@ -1,12 +1,13 @@
-package com.llmagent.embedding.dashscope.client;
+package com.llmagent.embedding.doubao.client;
 
-import com.llmagent.embedding.dashscope.EmbeddingRequest;
-import com.llmagent.embedding.dashscope.EmbeddingResponse;
+import com.llmagent.embedding.doubao.EmbeddingRequest;
+import com.llmagent.embedding.doubao.EmbeddingResponse;
 import com.llmagent.embedding.http.SyncOrAsync;
+
 import java.time.Duration;
 import java.util.Map;
 
-import static com.llmagent.embedding.dashscope.DashscopeAiHelper.MULTI_MODAL_API_URL;
+import static com.llmagent.embedding.doubao.DoubaoAiHelper.MULTI_MODAL_API_URL;
 
 public abstract class MultimodalEmbeddingClient {
 
@@ -15,7 +16,7 @@ public abstract class MultimodalEmbeddingClient {
     public abstract void shutdown();
 
     @SuppressWarnings("rawtypes")
-    public static MultimodalEmbeddingClient.Builder builder() {
+    public static Builder builder() {
         return DefaultMultimodalEmbeddingClient.builder();
     }
 

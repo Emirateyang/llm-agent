@@ -1,4 +1,4 @@
-package com.llmagent.llm.output;
+package com.llmagent.embedding.doubao;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -10,62 +10,63 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
 import java.util.Objects;
 
-@JsonDeserialize(builder = MultimodalTokenUsage.Builder.class)
+@JsonDeserialize(builder = Usage.Builder.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public final class MultimodalTokenUsage {
+public final class Usage {
     @JsonProperty
-    private final Integer inputTokens;
+    private final Integer promptTokens;
     @JsonProperty
     private final Integer totalTokens;
     @JsonProperty
-    private final Integer duration;
-    public MultimodalTokenUsage(Builder builder) {
-        this.inputTokens = builder.inputTokens;
+    private final TokenDetail promptTokensDetails;
+
+    public Usage(Builder builder) {
+        this.promptTokens = builder.promptTokens;
         this.totalTokens = builder.totalTokens;
-        this.duration = builder.duration;
+        this.promptTokensDetails = builder.promptTokensDetails;
     }
 
-    public Integer inputTokens() {
-        return inputTokens;
+    public Integer promptTokens() {
+        return promptTokens;
     }
 
     public Integer totalTokens() {
         return totalTokens;
     }
 
-    public Integer duration() {
-        return duration;
+    public TokenDetail promptTokensDetails() {
+        return promptTokensDetails;
     }
 
     @Override
     public boolean equals(Object another) {
         if (this == another) return true;
-        return another instanceof MultimodalTokenUsage
-                && equalTo((MultimodalTokenUsage) another);
+        return another instanceof Usage
+                && equalTo((Usage) another);
     }
 
-    private boolean equalTo(MultimodalTokenUsage another) {
-        return Objects.equals(inputTokens, another.inputTokens)
+    private boolean equalTo(Usage another) {
+        return Objects.equals(promptTokens, another.promptTokens)
                 && Objects.equals(totalTokens, another.totalTokens)
-                && Objects.equals(duration, another.duration);
+                && Objects.equals(promptTokensDetails, another.promptTokensDetails);
     }
 
     @Override
     public int hashCode() {
         int h = 5381;
-        h += (h << 5) + Objects.hashCode(inputTokens);
+        h += (h << 5) + Objects.hashCode(promptTokens);
         h += (h << 5) + Objects.hashCode(totalTokens);
-        h += (h << 5) + Objects.hashCode(duration);
+        h += (h << 5) + Objects.hashCode(promptTokensDetails);
         return h;
     }
 
     @Override
     public String toString() {
-        return "MultimodalTokenUsage {"
-                + "inputTokens=" + inputTokens
+        return "Usage {"
+                + "promptTokens=" + promptTokens
                 + ", totalTokens=" + totalTokens
-                + ", duration=" + duration
+                + ", promptTokensDetails=" + promptTokensDetails
                 + "}";
     }
 
@@ -78,12 +79,12 @@ public final class MultimodalTokenUsage {
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static final class Builder {
 
-        private Integer inputTokens;
+        private Integer promptTokens;
         private Integer totalTokens;
-        private Integer duration;
+        private TokenDetail promptTokensDetails;
 
-        public Builder inputTokens(Integer inputTokens) {
-            this.inputTokens = inputTokens;
+        public Builder inputTokens(Integer promptTokens) {
+            this.promptTokens = promptTokens;
             return this;
         }
 
@@ -92,14 +93,14 @@ public final class MultimodalTokenUsage {
             return this;
         }
 
-        public Builder duration(Integer duration) {
-            this.duration = duration;
+        public Builder promptTokensDetails(TokenDetail promptTokensDetails) {
+            this.promptTokensDetails = promptTokensDetails;
             return this;
         }
 
 
-        public MultimodalTokenUsage build() {
-            return new MultimodalTokenUsage(this);
+        public Usage build() {
+            return new Usage(this);
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.llmagent.vector.store;
+package com.llmagent.embedding.dashscope;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Data
-public final class MultimodalEmbeddingOutput {
+public final class EmbeddingOutput {
 
     private List<Embeddings> embeddings;
 
@@ -45,7 +45,7 @@ public final class MultimodalEmbeddingOutput {
         }
     }
 
-    private boolean equalTo(MultimodalEmbeddingOutput another) {
+    private boolean equalTo(EmbeddingOutput another) {
         return Objects.equals(embeddings, another.embeddings);
     }
 
@@ -58,8 +58,8 @@ public final class MultimodalEmbeddingOutput {
 
     @Override
     public String toString() {
-        return "Usage{"
-                + "EmbeddingOutput=" + embeddings
+        return "EmbeddingOutput{"
+                + "embeddings=" + embeddings
                 + "}";
     }
 }

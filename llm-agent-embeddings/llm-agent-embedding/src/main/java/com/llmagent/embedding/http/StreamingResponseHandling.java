@@ -1,4 +1,4 @@
-package com.llmagent.embedding.dashscope;
+package com.llmagent.embedding.http;
 
 public interface StreamingResponseHandling extends AsyncResponseHandling {
 
