@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>llm-agent-mcp</artifactId>
+    <version>1.0.0-beta.10</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
