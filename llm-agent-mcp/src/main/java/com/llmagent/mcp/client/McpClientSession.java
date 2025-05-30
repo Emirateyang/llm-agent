@@ -3,7 +3,6 @@ package com.llmagent.mcp.client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.llmagent.mcp.spec.*;
 import com.llmagent.util.UUIDUtil;
-import com.llmagent.util.ValidationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
@@ -14,6 +13,8 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static com.llmagent.util.ValidationUtil.ensureNotNull;
 
 public class McpClientSession implements McpSession {
 
@@ -48,10 +49,10 @@ public class McpClientSession implements McpSession {
                             Map<String, RequestHandler<?>> requestHandlers,
                             Map<String, NotificationHandler> notificationHandlers) {
 
-        ValidationUtil.ensureNotNull(requestTimeout, "The requestTimeout can not be null");
-        ValidationUtil.ensureNotNull(transport, "The transport can not be null");
-        ValidationUtil.ensureNotNull(requestHandlers, "The requestHandlers can not be null");
-        ValidationUtil.ensureNotNull(notificationHandlers, "The notificationHandlers can not be null");
+        ensureNotNull(requestTimeout, "The requestTimeout can not be null");
+        ensureNotNull(transport, "The transport can not be null");
+        ensureNotNull(requestHandlers, "The requestHandlers can not be null");
+        ensureNotNull(notificationHandlers, "The notificationHandlers can not be null");
 
         this.requestTimeout = requestTimeout;
         this.transport = transport;
