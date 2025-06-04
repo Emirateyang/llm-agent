@@ -9,6 +9,7 @@
         <version>1.0.0-beta.10</version>
     </parent>
 
+    <name>llm-agent-core</name>
     <artifactId>llm-agent-core</artifactId>
     <version>1.0.0-beta.10</version>
     <description>llm agent core module</description>

@@ -9,6 +9,7 @@
         <version>1.0.0-beta.10</version>
     </parent>
 
+    <name>llm-agent-embedding</name>
     <artifactId>llm-agent-embedding</artifactId>
 
     <properties>
