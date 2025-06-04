@@ -11,7 +11,7 @@
 
     <name>llm-agent-mcp</name>
     <artifactId>llm-agent-mcp</artifactId>
-    <version>1.0.0-beta.12</version>
+    <version>1.0.0-beta.13</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -20,6 +20,7 @@
         <reactor.version>3.7.5</reactor.version>
         <jackson.version>2.18.3</jackson.version>
         <spring.webflux.version>6.2.7</spring.webflux.version>
+        <spring.webmvc.version>6.2.7</spring.webmvc.version>
         <jakarta.servlet.version>6.1.0</jakarta.servlet.version>
     </properties>
 
@@ -61,10 +62,20 @@
             <version>${spring.webflux.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>${spring.webmvc.version}</version>
+        </dependency>
+        <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <version>${jakarta.servlet.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>fun.krinsiman.llm</groupId>
+            <artifactId>llm-agent-openai</artifactId>
+            <version>${llm-agent.version}</version>
         </dependency>
     </dependencies>
 
