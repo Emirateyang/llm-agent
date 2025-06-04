@@ -204,7 +204,7 @@ public class WebFluxSseServerTransportProvider implements McpServerProvider {
      * @param request The incoming server request
      * @return A Mono which emits a response with the SSE event stream
      */
-    private Mono<ServerResponse> handleSseConnection(ServerRequest request) {
+    public Mono<ServerResponse> handleSseConnection(ServerRequest request) {
         if (isClosing) {
             return ServerResponse.status(HttpStatus.SERVICE_UNAVAILABLE.value()).bodyValue("Server is shutting down");
         }
@@ -248,7 +248,7 @@ public class WebFluxSseServerTransportProvider implements McpServerProvider {
      * @param request The incoming server request containing the JSON-RPC message
      * @return A Mono emitting the response indicating the message processing result
      */
-    private Mono<ServerResponse> handleMessage(ServerRequest request) {
+    public Mono<ServerResponse> handleMessage(ServerRequest request) {
         if (isClosing) {
             return ServerResponse.status(HttpStatus.SERVICE_UNAVAILABLE.value()).bodyValue("Server is shutting down");
         }
