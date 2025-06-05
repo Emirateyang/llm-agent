@@ -6,7 +6,7 @@
 
     <groupId>fun.krinsiman.llm</groupId>
     <artifactId>llm-agent-embeddings</artifactId>
-    <version>1.0.0-beta.10</version>
+    <version>1.0.0-beta.11</version>
     <packaging>pom</packaging>
 
     <name>llm-agent-embeddings</name>
