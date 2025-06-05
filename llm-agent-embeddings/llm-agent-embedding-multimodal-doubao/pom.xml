@@ -10,6 +10,7 @@
     </parent>
 
     <name>llm-agent-embedding-multimodal-doubao</name>
+    <version>1.0.0-beta.11</version>
     <artifactId>llm-agent-embedding-multimodal-doubao</artifactId>
 
     <properties>
