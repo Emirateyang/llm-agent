@@ -11,6 +11,7 @@
 
     <name>llm-agent-openai</name>
     <artifactId>llm-agent-openai</artifactId>
+    <version>1.0.0-beta.11</version>
     <description>llm agent components for team who use openai api</description>
 
     <properties>

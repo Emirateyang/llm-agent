@@ -15,7 +15,6 @@ import com.llmagent.openai.image.GenerateImagesRequest;
 import com.llmagent.openai.image.GenerateImagesResponse;
 import com.llmagent.openai.moderation.ModerationRequest;
 import com.llmagent.openai.moderation.ModerationResponse;
-import com.llmagent.openai.moderation.ModerationResult;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
@@ -25,7 +24,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static com.llmagent.openai.json.Json.GSON;
@@ -144,7 +142,7 @@ public class DefaultOpenAiClient extends OpenAiClient {
 
     @Override
     public SyncOrAsyncOrStreaming<ChatCompletionResponse> chatCompletion(ChatCompletionRequest request) {
-        ChatCompletionRequest syncRequest = ChatCompletionRequest.builder().from(request).stream(true).build();
+        ChatCompletionRequest syncRequest = ChatCompletionRequest.builder().from(request).stream(false).build();
 
         return new RequestExecutor<>(
                 openAiApi.chatCompletions(syncRequest, apiVersion),
