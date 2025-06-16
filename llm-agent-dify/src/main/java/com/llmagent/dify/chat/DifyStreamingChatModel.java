@@ -130,6 +130,9 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
             } else if (StringUtil.hasText(toolInput)) {
                 if (StringUtil.hasText(observation)) {
                     // tool called
+                    if (observation.contains("tool response")) {
+                        observation = observation.substring(0, observation.indexOf("tool response")) + "\"}";
+                    }
                     JSONObject jsonObject = JSON.parseObject(observation);
                     Object value = jsonObject.get(tool);
                     String result = "";

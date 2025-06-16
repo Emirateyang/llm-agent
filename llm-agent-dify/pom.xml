@@ -11,7 +11,7 @@
 
     <name>llm-agent-dify</name>
     <artifactId>llm-agent-dify</artifactId>
-    <version>1.0.0-beta.15</version>
+    <version>1.0.0-beta.16</version>
     <description>llm agent components for team who use dify</description>
 
     <properties>
