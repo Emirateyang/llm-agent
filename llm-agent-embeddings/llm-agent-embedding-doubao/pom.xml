@@ -3,70 +3,27 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>fun.krinsiman.llm</groupId>
+        <artifactId>llm-agent-embeddings</artifactId>
+        <version>1.0.0-beta.12</version>
+    </parent>
 
-    <groupId>fun.krinsiman.llm</groupId>
-    <artifactId>llm-agent-embeddings</artifactId>
+    <groupId>llm.agent.embedding.doubao</groupId>
     <version>1.0.0-beta.12</version>
-    <packaging>pom</packaging>
-
-    <name>llm-agent-embeddings</name>
-    <description>Parent POM for llm-agent-embedding submodules</description>
-
-    <modules>
-        <module>llm-agent-embedding</module>
-        <module>llm-agent-embedding-bge-m3</module>
-        <module>llm-agent-embedding-multimodal-dashscope</module>
-        <module>llm-agent-embedding-multimodal-doubao</module>
-        <module>llm-agent-embedding-doubao</module>
-    </modules>
+    <artifactId>llm-agent-embedding-doubao</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <llm-agent.version>1.0.0-beta.10</llm-agent.version>
-        <fastjson.version>2.0.51</fastjson.version>
-        <okhttp.version>4.12.0</okhttp.version>
-        <retrofit.version>2.11.0</retrofit.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>fun.krinsiman.llm</groupId>
-            <artifactId>llm-agent-core</artifactId>
-            <version>${llm-agent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>${fastjson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>${okhttp.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp-sse</artifactId>
-            <version>${okhttp.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.retrofit2</groupId>
-            <artifactId>retrofit</artifactId>
-            <version>${retrofit.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.retrofit2</groupId>
-            <artifactId>converter-gson</artifactId>
-            <version>${retrofit.version}</version>
-            <exclusions>
-                <!-- Due to CVE-2022-25647 and CVE-2020-15250 vulnerabilities -->
-                <exclusion>
-                    <groupId>com.google.code.gson</groupId>
-                    <artifactId>gson</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>llm-agent-embedding</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
@@ -162,4 +119,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>
