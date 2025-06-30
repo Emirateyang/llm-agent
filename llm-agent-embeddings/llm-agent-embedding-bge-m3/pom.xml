@@ -11,7 +11,7 @@
 
     <name>llm-agent-embedding-bge-m3</name>
     <version>1.0.0-beta.12</version>
-    <description>text embedding project using doubao modal</description>
+    <description>text embedding project using bge-m3</description>
     <artifactId>llm-agent-embedding-bge-m3</artifactId>
 
     <properties>

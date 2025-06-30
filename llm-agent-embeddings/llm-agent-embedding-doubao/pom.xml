@@ -10,6 +10,7 @@
     </parent>
 
     <name>llm-agent-embedding-doubao</name>
+    <description>text embedding project using doubao modal</description>
     <version>1.0.0-beta.12</version>
     <artifactId>llm-agent-embedding-doubao</artifactId>
 
