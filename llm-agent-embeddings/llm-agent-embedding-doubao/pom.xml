@@ -11,7 +11,7 @@
 
     <name>llm-agent-embedding-doubao</name>
     <description>text embedding project using doubao modal</description>
-    <version>1.0.0-beta.12</version>
+    <version>1.0.0-beta.13</version>
     <artifactId>llm-agent-embedding-doubao</artifactId>
 
     <properties>
