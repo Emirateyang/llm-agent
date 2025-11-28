@@ -129,23 +129,58 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
                 customerResponse = StreamResponse4Customer.builder().event("think").content(StringUtil.noText(content) ? "" : content).build();
             } else if (StringUtil.hasText(toolInput)) {
                 if (StringUtil.hasText(observation)) {
+                    String currentObservation = observation;
                     // tool called
-                    if (observation.contains("tool response")) {
-                        observation = observation.substring(0, observation.indexOf("tool response")) + "\"}";
+                    if (currentObservation.contains("tool response")) {
+                        int index = currentObservation.indexOf("tool response");
+                        currentObservation = currentObservation.substring(0, index) + "\"}";
                     }
-                    JSONObject jsonObject = JSON.parseObject(observation);
-                    Object value = jsonObject.get(tool);
-                    String result = "";
-                    if (value instanceof JSONObject) {
-                        result = ((JSONObject) value).getString("result");
-                    } else if (value instanceof String) {
-                        result = (String) value;
+                    try {
+                        JSONObject obsJson = JSON.parseObject(currentObservation);
+
+                        if (obsJson != null) {
+                            Object toolValue = obsJson.get(tool);
+                            String finalResult = "";
+
+                            if (toolValue instanceof String) {
+                                try {
+                                    String toolValueStr = (String) toolValue;
+                                    JSONObject innerJson = JSON.parseObject(toolValueStr);
+
+                                    if (innerJson != null && innerJson.containsKey("result")) {
+                                        finalResult = innerJson.getString("result");
+                                    } else {
+                                        finalResult = toolValueStr;
+                                    }
+                                } catch (Exception e) {
+                                    finalResult = (String) toolValue;
+                                }
+                            } else if (toolValue instanceof JSONObject) {
+                                finalResult = ((JSONObject) toolValue).getString("result");
+                            }
+
+                            if (StringUtil.isNotNullOrBlank(finalResult)) {
+                                customerResponse = StreamResponse4Customer.builder().event("toolCall")
+                                        .toolCall(fromToolCall(toolInput))
+                                        .observation(finalResult).build();
+                            }
+                        }
+                    } catch (Exception ex) {
+
                     }
-                    if (StringUtil.isNotNullOrBlank(result)) {
-                        customerResponse = StreamResponse4Customer.builder().event("toolCall")
-                                .toolCall(fromToolCall(toolInput))
-                                .observation(result).build();
-                    }
+//                    JSONObject jsonObject = JSON.parseObject(currentObservation);
+//                    Object value = jsonObject.get(tool);
+//                    String result = "";
+//                    if (value instanceof JSONObject) {
+//                        result = ((JSONObject) value).getString("result");
+//                    } else if (value instanceof String) {
+//                        result = (String) value;
+//                    }
+//                    if (StringUtil.isNotNullOrBlank(result)) {
+//                        customerResponse = StreamResponse4Customer.builder().event("toolCall")
+//                                .toolCall(fromToolCall(toolInput))
+//                                .observation(result).build();
+//                    }
                 } else {
                     // calling
                     customerResponse = StreamResponse4Customer.builder().event("toolCall")
