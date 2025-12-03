@@ -143,20 +143,9 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
                             String finalResult = "";
 
                             if (toolValue instanceof String) {
-                                try {
-                                    String toolValueStr = (String) toolValue;
-                                    JSONObject innerJson = JSON.parseObject(toolValueStr);
-
-                                    if (innerJson != null && innerJson.containsKey("result")) {
-                                        finalResult = innerJson.getString("result");
-                                    } else {
-                                        finalResult = toolValueStr;
-                                    }
-                                } catch (Exception e) {
-                                    finalResult = (String) toolValue;
-                                }
+                                finalResult = (String) toolValue;
                             } else if (toolValue instanceof JSONObject) {
-                                finalResult = ((JSONObject) toolValue).getString("result");
+                                finalResult = ((JSONObject) toolValue).toJSONString();
                             }
 
                             if (StringUtil.isNotNullOrBlank(finalResult)) {
