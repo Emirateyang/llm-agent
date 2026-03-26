@@ -15,6 +15,8 @@ import com.llmagent.util.StringUtil;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -142,8 +144,51 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
                             Object toolValue = obsJson.get(tool);
                             String finalResult = "";
 
-                            if (toolValue instanceof String) {
-                                finalResult = (String) toolValue;
+//                            if (toolValue instanceof String) {
+//                                finalResult = (String) toolValue;
+//                            } else if (toolValue instanceof JSONObject) {
+//                                finalResult = ((JSONObject) toolValue).toJSONString();
+//                            }
+
+                            if (toolValue instanceof String rawString) {
+                                String cleanResult = rawString;
+                                boolean isParsed = false;
+
+                                // 1. Fast Path
+                                if (rawString.trim().startsWith("{")) {
+                                    try {
+                                        JSON.parseObject(rawString); // validate json
+                                        cleanResult = rawString;     // valid - keep original data
+                                        isParsed = true;
+                                    } catch (Exception e) {
+                                        // has dirty data, do tail search
+                                    }
+                                }
+
+                                // 2. Heuristic Tail Search
+                                if (!isParsed) {
+                                    int lastResultIndex = rawString.lastIndexOf("{\"result\":");
+
+                                    if (lastResultIndex == -1) {
+                                        int streamIndex = rawString.lastIndexOf("stream=");
+                                        if (streamIndex != -1) {
+                                            lastResultIndex = rawString.indexOf('{', streamIndex);
+                                        }
+                                    }
+
+                                    if (lastResultIndex != -1) {
+                                        String possibleJson = rawString.substring(lastResultIndex);
+                                        try {
+                                            JSON.parseObject(possibleJson); // validate json
+                                            cleanResult = possibleJson;
+                                        } catch (Exception e) {
+                                            cleanResult = rawString; // final backup
+                                        }
+                                    }
+                                }
+
+                                finalResult = cleanResult;
+
                             } else if (toolValue instanceof JSONObject) {
                                 finalResult = ((JSONObject) toolValue).toJSONString();
                             }
@@ -155,7 +200,8 @@ public class DifyStreamingChatModel implements StreamingChatLanguageModel {
                             }
                         }
                     } catch (Exception ex) {
-
+                        //unknown exception
+                        log.warn("===== ⚠️ llm-agent internal exception =====", ex);
                     }
 //                    JSONObject jsonObject = JSON.parseObject(currentObservation);
 //                    Object value = jsonObject.get(tool);
